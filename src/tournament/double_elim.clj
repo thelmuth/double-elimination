@@ -173,7 +173,10 @@
 
   (make-wb 13)
 
-  (wb-by-round (make-wb 5)))
+
+  (make-wb 3)
+
+  )
 
 ;;;;; new Losers bracket
 

@@ -1,3 +1,6 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.12.1"}}
- :aliases {:test {:extra-paths ["test"]}}}
+ :aliases  {:test       {:extra-paths ["test"]
+                         :extra-deps  {io.github.metabase/hawk   {:sha "9c97bcb6d4de116325e651b40973fd0a75b7ae21"}
+                                       meander/epsilon           {:mvn/version "0.0.650"}}
+                         :exec-fn     mb.hawk.core/find-and-run-tests-cli}}}
