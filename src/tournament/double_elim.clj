@@ -84,8 +84,8 @@
    :prev-left - The ID of the match from which the first player of the game came, concatenated with winner or loser. Examples: WB-G4-winner, WB-G2-loser, LB-G3-winner
    :prev-right - Same as above, except for the second player
    "
-  [id round bracket players]
-  {:id id
+  [bracket round number players]
+  {:number number
    :round round
    :bracket bracket
    :players players
@@ -108,16 +108,16 @@
         rounds (int (log2 slots))
         pairs (initial-wb-pairs n)
         ;; build round-1 matches and give them IDs "WB-M1" .. "WB-Mk"
-        round1 (mapv (fn [i p]
-                       (let [id (str "WB-M" i)]
-                         (make-match id 1 "WB" (vec p))))
-                     (map inc (range))
+        round1 (mapv (fn [i p] 
+                       (make-match :WB 1 i (vec p)))
+                     (range)
                      pairs)
         ;; starting counter for the next new match id
-        start-counter (inc (count round1))]
+        start-counter (count round1)]
     ;; Iterate rounds 2..rounds, building matches and wiring :prev-* and :next-winner.
     (loop [r 2
            rounds-vec [round1]       ;; vector of round-vectors; index 0 == round1
+           num-prior-matches 0
            counter start-counter]
       (if (> r rounds)
         ;; finished: flatten rounds in round order and return vector of maps
@@ -132,20 +132,23 @@
               ;; reduce over the pairs of previous-round matches to:
               ;;  - create the new matches for this round
               ;;  - update the previous-round matches with :next-winner => new-id
-              {:keys [updated-prev new-round counter]}
+              {:keys [updated-prev new-round]}
               (reduce
                (fn [acc j]
                  (let [uprev (:updated-prev acc)
-                       left (nth uprev (* 2 j))
-                       right (nth uprev (inc (* 2 j)))
-                       id (str "WB-M" (:counter acc))
-                       prev-left (str (:id left) "-winner")
-                       prev-right (str (:id right) "-winner")
-                       new-match (-> (make-match id r "WB" [:TBD :TBD])
+                       left-idx (* 2 j)
+                       right-idx (inc (* 2 j))
+                       left (nth uprev left-idx)
+                       right (nth uprev right-idx)
+                       number (:counter acc)
+                       prev-left {:bracket :WB :number (+ num-prior-matches left-idx) :result :winner}
+                       prev-right {:bracket :WB :number (+ num-prior-matches right-idx) :result :winner}
+                       new-match (-> (make-match :WB r number [:TBD :TBD])
                                      (assoc :prev-left prev-left :prev-right prev-right))
+                       next-winner {:bracket :WB :number number}
                        uprev' (-> uprev
-                                  (assoc (* 2 j) (assoc left :next-winner id))
-                                  (assoc (inc (* 2 j)) (assoc right :next-winner id)))]
+                                  (assoc left-idx (assoc left :next-winner next-winner))
+                                  (assoc right-idx (assoc right :next-winner next-winner)))]
                    {:updated-prev uprev'
                     :new-round (conj (:new-round acc) new-match)
                     :counter (inc (:counter acc))}))
@@ -156,7 +159,10 @@
               rounds-vec' (assoc rounds-vec (dec (count rounds-vec)) updated-prev)
               ;; append the newly-built round
               rounds-vec'' (conj rounds-vec' new-round)]
-          (recur (inc r) rounds-vec'' counter))))))
+          (recur (inc r)
+                 rounds-vec'' 
+                 counter
+                 (+ counter matches-in-round)))))))
 
 
 
@@ -177,6 +183,129 @@
   (make-wb 3)
 
   )
+
+;; ------------------------
+;; Drop-order helpers
+;; ------------------------
+
+(def drop-orders
+  "Cycle of drop orders used for successive winner rounds."
+  [:reverse :half-reverse :half-swap :standard])
+
+(defn drop-order-for-wb-round
+  "Return the drop-order for a given winners-round index (1-based)."
+  [wb-round-num]
+  (nth drop-orders
+       (mod (dec wb-round-num)
+            (count drop-orders))))
+
+(defn apply-drop-order
+  "Reorder a vector `v` according to `order` keyword."
+  [order v]
+  (case order
+    :standard v
+    :reverse (vec (reverse v))
+    :half-reverse (let [half (quot (count v) 2)
+                        a (subvec (vec v) 0 half)
+                        b (subvec (vec v) half)]
+                    (vec (concat (reverse a) (reverse b))))
+    :half-swap (let [half (quot (count v) 2)]
+                 (vec (concat (subvec (vec v) half) (subvec (vec v) 0 half))))
+    v))
+
+;; ------------------------
+;; Losers Bracket
+;; ------------------------
+
+(defn make-lb-round-1
+  "Create round 1 of Losers Bracket based on round 1 of Winners Bracket"
+  [wb-round-1]
+  (map-indexed (fn [idx [left right]]
+                 (assoc (make-match :LB 1 idx [:TBD :TBD])
+                        :prev-left {:bracket :WB :number (:number left) :result :loser}
+                        :prev-right {:bracket :WB :number (:number right) :result :loser}
+                        :next-winner {:bracket :LB :number (+ (quot (count wb-round-1) 2)
+                                                              idx)})) ;; don't divide by 2 since next round is against drop downs from winner's
+               (partition 2 wb-round-1)))
+
+(defn make-even-round-lb
+  "Create an even round of the losers bracket, where each match is a pairing of
+   a player dropped down from the winners bracket (who lost) [left player]
+   and a player who just won a game in the losers bracket [right player]"
+  [last-round-lb wb-by-round lb-round-num]
+  (let [wb-drop-down-round-num (inc (quot lb-round-num 2))
+        wb-round (get wb-by-round wb-drop-down-round-num)
+        wb-round-drop-ordered (apply-drop-order (drop-order-for-wb-round wb-drop-down-round-num)
+                                                wb-round)
+        pairs (partition 2 (interleave wb-round-drop-ordered last-round-lb))
+        start-match-number (inc (:number (last last-round-lb)))]
+    (map-indexed (fn [idx [left right]]
+                   (assoc (make-match :LB lb-round-num (+ start-match-number idx) [:TBD :TBD])
+                          :prev-left {:bracket :WB :number (:number left) :result :loser}
+                          :prev-right {:bracket :LB :number (:number right) :result :winner}
+                          :next-winner {:bracket :LB :number (+ start-match-number
+                                                                (count pairs)
+                                                                (quot idx 2))}))
+                 pairs)))
+
+(defn make-odd-round-lb
+  "Create an odd round of the losers bracket, where each match is a pairing of
+   a two players that just won in the previous round of the losers bracket."
+  [last-round-lb lb-round-num]
+  (let [pairs (partition 2 last-round-lb)
+        start-match-number (inc (:number (last last-round-lb)))]
+    (map-indexed (fn [idx [left right]]
+                   (assoc (make-match :LB lb-round-num (+ start-match-number idx) [:TBD :TBD])
+                          :prev-left {:bracket :LB :number (:number left) :result :winner}
+                          :prev-right {:bracket :LB :number (:number right) :result :winner}
+                          :next-winner {:bracket :LB :number (+ start-match-number
+                                                                (count pairs)
+                                                                (quot idx 2))}))
+                 pairs)))
+
+;; TO DO: 
+;; - update winner bracket places going
+;; - test full brackets and winners brackets on larger tournaments
+
+
+(defn make-lb
+  "Build a full, precomputed Losers Bracket for `n` players given `wb` (vector of WB matches).
+   Returns {:wb updated-wb :lb lb-matches} with LB matches in round order and WB matches updated
+   with :next-loser where appropriate."
+  [wb]
+  (let [wb-by-round (group-by :round wb)]
+    (loop [round 1
+           lb '()
+           last-round-lb nil]
+      (let [this-round-lb
+            (cond
+              (= 1 round) (make-lb-round-1 (get wb-by-round 1))
+              (odd? round) (make-odd-round-lb last-round-lb round)
+              (even? round) (make-even-round-lb last-round-lb wb-by-round round))]
+        (if (and (even? round)
+                 (= 1 (count this-round-lb)))
+          {:wb wb
+           :lb (concat lb
+                       (assoc-in (vec this-round-lb)
+                                 [(dec (count this-round-lb)) :next-winner]
+                                 {:bracket :GF :number 0}))}
+          (recur (inc round)
+                 (concat lb this-round-lb)
+                 this-round-lb))))))
+
+
+(comment
+
+  (let [players 9]
+    (make-lb (make-wb players)))
+
+  (group-by :round
+            (make-wb 8))
+
+  )
+
+
+
 
 ;;;;; new Losers bracket
 
@@ -213,11 +342,6 @@
 ;; Utility: group WB matches by round in order
 ;; ------------------------
 
-;; (defn simpler-wb-by-round
-;;   "Group WB matches by round number: {1 [...], 2 [...], ...}."
-;;   [wb]
-;;   (group-by :round wb))
-
 ;; (defn wb-by-round
 ;;   "Return a map from round number -> vector of WB matches in the same order they appear
 ;;    in the `wb` vector. (If a round has no matches, key may be absent.)"
@@ -238,6 +362,21 @@
     (into {}
           (for [r (range 1 (inc max-round))]
             [r (vec (filter #(= (:round %) r) wb))]))))
+
+(defn wb-by-round
+  "Group WB matches by round number: {1 [...], 2 [...], ...}."
+  [wb]
+  (group-by :round wb))
+
+
+(comment
+  
+  
+  (wb-by-round-ordered (make-wb 6))
+
+  (wb-by-round (make-wb 6))
+  
+  )            
 
 (defn drop-order-for-wb-round
   "Return the drop-order for a given winners round (1-based)."
@@ -265,7 +404,7 @@
   (let [m (- (count coll) n)]
     (vec (concat (subvec (vec coll) 0 m) new-subvec))))
 
-(defn make-lb
+(defn make-lb-most-recent-chatgpt
   "Build a *full*, precomputed Losers Bracket for `n` players given `wb` (vector of WB matches).
    Returns {:wb updated-wb :lb lb-matches} with LB matches in round order and WB matches updated
    with :next-loser where appropriate."
