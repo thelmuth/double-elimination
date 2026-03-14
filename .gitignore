@@ -21,3 +21,4 @@ pom.xml.asc
 .calva/repl.calva-repl
 .lsp/.cache
 .clj-kondo/.cache
+.clj-kondo/imports
