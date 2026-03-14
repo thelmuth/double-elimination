@@ -109,7 +109,8 @@
         pairs (initial-wb-pairs n)
         ;; build round-1 matches and give them IDs "WB-M1" .. "WB-Mk"
         round1 (mapv (fn [i p] 
-                       (make-match :WB 1 i (vec p)))
+                       (assoc (make-match :WB 1 i (vec p))
+                              :next-loser {:bracket :LB :number (quot i 2)}))
                      (range)
                      pairs)
         ;; starting counter for the next new match id
@@ -264,7 +265,8 @@
                  pairs)))
 
 ;; TO DO: 
-;; - update winner bracket places going
+;; - update winner bracket places going for loser
+;; - make winner of winners bracket go to :GF
 ;; - test full brackets and winners brackets on larger tournaments
 
 
