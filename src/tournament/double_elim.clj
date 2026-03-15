@@ -1,7 +1,6 @@
 (ns tournament.double-elim)
 
 ;; TO DO:
-;; - clean up unused code
 ;; - make grand finals "bracket", which will only have 1 game
 ;; - test full brackets and winners brackets on larger tournaments
 
