@@ -269,18 +269,18 @@
 ;; - test full brackets and winners brackets on larger tournaments
 
 (defn set-wb-next-loser-from-lb-match
-  "Given a map of WB match number -> match (`wb-map`), an LB match, and a side
-   keyword (:prev-left or :prev-right), returns an updated `wb-map` with
+  "Given a WB vector (indexed by match number), an LB match, and a side
+   keyword (:prev-left or :prev-right), returns an updated WB vector with
    :next-loser set on the referenced WB match if that side is a WB loser reference.
-   If the side references an LB match or is nil, returns `wb-map` unchanged."
-  [wb-map lb-match side]
+   If the side references an LB match or is nil, returns the WB vector unchanged."
+  [wb lb-match side]
   (let [ref (get lb-match side)]
     (if (and (map? ref)
              (= :WB (:bracket ref))
              (= :loser (:result ref)))
-      (assoc-in wb-map [(:number ref) :next-loser]
+      (assoc-in wb [(:number ref) :next-loser]
                 {:bracket :LB :number (:number lb-match)})
-      wb-map)))
+      wb)))
 
 (defn make-lb
   "Build a full, precomputed Losers Bracket for `n` players given `wb` (vector of WB matches).
@@ -303,18 +303,14 @@
                                       (assoc-in (vec this-round-lb)
                                                 [(dec (count this-round-lb)) :next-winner]
                                                 {:bracket :GF :number 0})))
-                ;; Build a map of WB match number -> match for efficient lookup/update
-                wb-indexed (into {} (map (fn [m] [(:number m) m]) wb))
                 ;; For each LB match, check both prev refs and set :next-loser on any
                 ;; referenced WB match to point back to this LB match
-                updated-wb-map (reduce (fn [wb-map lb-match]
-                                         (-> wb-map
-                                             (set-wb-next-loser-from-lb-match lb-match :prev-left)
-                                             (set-wb-next-loser-from-lb-match lb-match :prev-right)))
-                                       wb-indexed
-                                       final-lb)
-                ;; Convert back to an ordered vector indexed by match number
-                updated-wb (mapv #(get updated-wb-map %) (range (count wb)))]
+                updated-wb (reduce (fn [wb lb-match]
+                                     (-> wb
+                                         (set-wb-next-loser-from-lb-match lb-match :prev-left)
+                                         (set-wb-next-loser-from-lb-match lb-match :prev-right)))
+                                   wb
+                                   final-lb)]
             {:wb updated-wb :lb final-lb})
           (recur (inc round)
                  (concat lb this-round-lb)
