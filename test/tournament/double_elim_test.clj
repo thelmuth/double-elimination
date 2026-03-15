@@ -47,7 +47,8 @@
                    :next-winner {:bracket :WB :number 2})
             (assoc (de/make-match :WB 2 2 [:TBD :TBD])
                    :prev-left {:bracket :WB :number 0 :result :winner}
-                   :prev-right {:bracket :WB :number 1 :result :winner})]
+                   :prev-right {:bracket :WB :number 1 :result :winner}
+                   :next-winner {:bracket :GF :number 0})]
            (de/make-wb 3))))
 
   (testing "4-player WB"
@@ -55,7 +56,8 @@
             (assoc (de/make-match :WB 1 1 [2 3]) :next-winner {:bracket :WB :number 2})
             (assoc (de/make-match :WB 2 2 [:TBD :TBD])
                    :prev-left {:bracket :WB :number 0 :result :winner}
-                   :prev-right {:bracket :WB :number 1 :result :winner})]
+                   :prev-right {:bracket :WB :number 1 :result :winner}
+                   :next-winner {:bracket :GF :number 0})]
            (de/make-wb 4))))
 
   (testing "5-player WB"
@@ -75,7 +77,8 @@
             ;; round 3
             (assoc (de/make-match :WB 3 6 [:TBD :TBD])
                    :prev-left {:bracket :WB :number 4 :result :winner}
-                   :prev-right {:bracket :WB :number 5 :result :winner})]
+                   :prev-right {:bracket :WB :number 5 :result :winner}
+                   :next-winner {:bracket :GF :number 0})]
            (de/make-wb 5))))
 
   (testing "13-player WB"
@@ -116,7 +119,8 @@
             ;; round 4
             (assoc (de/make-match :WB 4 14 [:TBD :TBD])
                    :prev-left {:bracket :WB :number 12 :result :winner}
-                   :prev-right {:bracket :WB :number 13 :result :winner})]
+                   :prev-right {:bracket :WB :number 13 :result :winner}
+                   :next-winner {:bracket :GF :number 0})]
            (de/make-wb 13)))))
 
 (deftest drop-order-for-wb-round-test
@@ -196,6 +200,7 @@
                   (assoc (de/make-match :WB 2 2 [:TBD :TBD])
                          :prev-left {:bracket :WB :number 0 :result :winner}
                          :prev-right {:bracket :WB :number 1 :result :winner}
+                         :next-winner {:bracket :GF :number 0}
                          :next-loser  {:bracket :LB :number 1})]
                  wb))
         (is (= [(assoc (de/make-match :LB 1 0 [:TBD :TBD]) ;; LB round 1
@@ -236,6 +241,7 @@
                        :prev-right {:bracket :WB :number 3 :result :winner})
                 ;; round 3
                 (assoc (de/make-match :WB 3 6 [:TBD :TBD])
+                       :next-winner {:bracket :GF :number 0}
                        :next-loser {:bracket :LB :number 5}
                        :prev-left {:bracket :WB :number 4 :result :winner}
                        :prev-right {:bracket :WB :number 5 :result :winner})]

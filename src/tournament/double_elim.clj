@@ -1,5 +1,8 @@
 (ns tournament.double-elim)
 
+;; TO DO:
+;; - test full brackets and winners brackets on larger tournaments
+
 ;; Notes for future:
 ;; - when adapting for music tourney, make it so that players are provided by a CSV
 ;;   that is automatically converted to a map with a key for each column, and also
@@ -120,8 +123,9 @@
            num-prior-matches 0
            counter start-counter]
       (if (> r rounds)
-        ;; finished: flatten rounds in round order and return vector of maps
-        (vec (apply concat rounds-vec))
+        ;; finished: flatten rounds in round order, then wire the final match's winner to GF
+        (let [wb (vec (apply concat rounds-vec))]
+          (assoc-in wb [(dec (count wb)) :next-winner] {:bracket :GF :number 0}))
         (let [prev (peek rounds-vec)          ;; previous round matches (vector)
               prev-count (count prev)
               matches-in-round (quot prev-count 2)
@@ -262,11 +266,6 @@
                                                                 (count pairs)
                                                                 (quot idx 2))}))
                  pairs)))
-
-;; TO DO:
-;; - update winner bracket places going for loser
-;; - make winner of winners bracket go to :GF
-;; - test full brackets and winners brackets on larger tournaments
 
 (defn set-wb-next-loser-from-lb-match
   "Given a WB vector (indexed by match number), an LB match, and a side
