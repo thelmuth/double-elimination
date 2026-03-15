@@ -42,15 +42,12 @@
 (deftest make-wb-test
   (testing "3-player WB"
     (is (= [(assoc (de/make-match :WB 1 0 [1 :BYE])
-                   :next-winner {:bracket :WB :number 2}
-                   :next-loser {:bracket :LB :number 0})
+                   :next-winner {:bracket :WB :number 2})
             (assoc (de/make-match :WB 1 1 [2 3])
-                   :next-winner {:bracket :WB :number 2}
-                   :next-loser {:bracket :LB :number 0})
+                   :next-winner {:bracket :WB :number 2})
             (assoc (de/make-match :WB 2 2 [:TBD :TBD])
                    :prev-left {:bracket :WB :number 0 :result :winner}
-                   :prev-right {:bracket :WB :number 1 :result :winner}
-                   :next-loser {:bracket :LB :number 1})] ;; this one doesn't work yet
+                   :prev-right {:bracket :WB :number 1 :result :winner})]
            (de/make-wb 3))))
 
   (testing "4-player WB"

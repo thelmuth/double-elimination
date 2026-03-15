@@ -108,9 +108,8 @@
         rounds (int (log2 slots))
         pairs (initial-wb-pairs n)
         ;; build round-1 matches and give them IDs "WB-M1" .. "WB-Mk"
-        round1 (mapv (fn [i p] 
-                       (assoc (make-match :WB 1 i (vec p))
-                              :next-loser {:bracket :LB :number (quot i 2)}))
+        round1 (mapv (fn [i p]
+                       (make-match :WB 1 i (vec p)))
                      (range)
                      pairs)
         ;; starting counter for the next new match id
@@ -264,11 +263,24 @@
                                                                 (quot idx 2))}))
                  pairs)))
 
-;; TO DO: 
+;; TO DO:
 ;; - update winner bracket places going for loser
 ;; - make winner of winners bracket go to :GF
 ;; - test full brackets and winners brackets on larger tournaments
 
+(defn set-wb-next-loser-from-lb-match
+  "Given a map of WB match number -> match (`wb-map`), an LB match, and a side
+   keyword (:prev-left or :prev-right), returns an updated `wb-map` with
+   :next-loser set on the referenced WB match if that side is a WB loser reference.
+   If the side references an LB match or is nil, returns `wb-map` unchanged."
+  [wb-map lb-match side]
+  (let [ref (get lb-match side)]
+    (if (and (map? ref)
+             (= :WB (:bracket ref))
+             (= :loser (:result ref)))
+      (assoc-in wb-map [(:number ref) :next-loser]
+                {:bracket :LB :number (:number lb-match)})
+      wb-map)))
 
 (defn make-lb
   "Build a full, precomputed Losers Bracket for `n` players given `wb` (vector of WB matches).
@@ -286,11 +298,24 @@
               (even? round) (make-even-round-lb last-round-lb wb-by-round round))]
         (if (and (even? round)
                  (= 1 (count this-round-lb)))
-          {:wb wb
-           :lb (concat lb
-                       (assoc-in (vec this-round-lb)
-                                 [(dec (count this-round-lb)) :next-winner]
-                                 {:bracket :GF :number 0}))}
+          (let [;; Wire the final LB match's winner to Grand Finals
+                final-lb (vec (concat lb
+                                      (assoc-in (vec this-round-lb)
+                                                [(dec (count this-round-lb)) :next-winner]
+                                                {:bracket :GF :number 0})))
+                ;; Build a map of WB match number -> match for efficient lookup/update
+                wb-indexed (into {} (map (fn [m] [(:number m) m]) wb))
+                ;; For each LB match, check both prev refs and set :next-loser on any
+                ;; referenced WB match to point back to this LB match
+                updated-wb-map (reduce (fn [wb-map lb-match]
+                                         (-> wb-map
+                                             (set-wb-next-loser-from-lb-match lb-match :prev-left)
+                                             (set-wb-next-loser-from-lb-match lb-match :prev-right)))
+                                       wb-indexed
+                                       final-lb)
+                ;; Convert back to an ordered vector indexed by match number
+                updated-wb (mapv #(get updated-wb-map %) (range (count wb)))]
+            {:wb updated-wb :lb final-lb})
           (recur (inc round)
                  (concat lb this-round-lb)
                  this-round-lb))))))
