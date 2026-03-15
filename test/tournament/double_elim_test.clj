@@ -124,6 +124,8 @@
            (de/make-wb 13)))))
 
 (deftest drop-order-for-wb-round-test
+  (is (= :standard
+         (de/drop-order-for-wb-round 1)))
   (is (= :reverse
          (de/drop-order-for-wb-round 2)))
   (is (= :half-reverse
