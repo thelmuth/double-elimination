@@ -6,7 +6,7 @@
   (is (= '(1 2 4 4 8 8 8 8 16 16 16 16 16 16 16 16 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 64 64 64)
          (map de/next-power-of-two (map inc (range 35)))))
   (is (= '(0 1 1 2 2 2 2 3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 5 5 5 5)
-         (map de/log2 (map inc (range 35))))))
+         (map de/floor-log2 (map inc (range 35))))))
 
 (deftest seeding-test
   (testing "seeding-order"

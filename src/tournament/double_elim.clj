@@ -20,7 +20,7 @@
   (loop [p 1]
     (if (>= p n) p (recur (* 2 p)))))
 
-(defn log2
+(defn floor-log2
   "Return floor(log2 x). Assumes x is positive."
   [x]
   (loop [value 1
@@ -108,7 +108,7 @@
    Returns a vector of match maps in round order."
   [n]
   (let [slots (next-power-of-two n)
-        rounds (int (log2 slots))
+        rounds (int (floor-log2 slots))
         pairs (initial-wb-pairs n)
         ;; build round-1 matches and give them IDs "WB-M1" .. "WB-Mk"
         round1 (mapv (fn [i p]
