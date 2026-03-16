@@ -245,7 +245,7 @@
                           :prev-right {:bracket :LB :number (:number right) :result :winner}
                           :next-winner {:bracket :LB :number (+ start-match-number
                                                                 (count pairs)
-                                                                (quot idx 2))}))
+                                                                idx)}))
                  pairs)))
 
 (defn set-wb-next-loser-from-lb-match
