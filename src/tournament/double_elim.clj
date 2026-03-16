@@ -1,7 +1,6 @@
 (ns tournament.double-elim)
 
 ;; TO DO:
-;; - make grand finals "bracket", which will only have 1 game
 ;; - test full brackets and winners brackets on larger tournaments
 
 ;; Notes for future:
@@ -280,6 +279,7 @@
         (if (and (even? round)
                  (= 1 (count this-round-lb)))
           (let [;; Wire the final LB match's winner to Grand Finals
+                ;;   (note: GF match itself is constructed separately by make-gf)
                 final-lb (vec (concat lb
                                       (assoc-in (vec this-round-lb)
                                                 [(dec (count this-round-lb)) :next-winner]
@@ -296,6 +296,35 @@
           (recur (inc round)
                  (concat lb this-round-lb)
                  this-round-lb))))))
+
+
+;; ------------------------
+;; Grand Finals
+;; ------------------------
+
+(defn make-gf
+  "Creates the Grand Finals bracket — a vector containing the single GF match.
+   The left player comes from the winner of the final WB match; the right player
+   comes from the winner of the final LB match."
+  [wb lb]
+  [(assoc (make-match :GF 1 0 [:TBD :TBD])
+          :prev-left  {:bracket :WB :number (:number (last wb)) :result :winner}
+          :prev-right {:bracket :LB :number (:number (last lb)) :result :winner})])
+
+;; ------------------------
+;; Full Tournament
+;; ------------------------
+
+(defn make-double-elimination
+  "Makes full double elimination tournament with n players.
+   Returns map with keys :wb, :lb, and :gf for the winner's bracket, loser's
+   bracket, and grand finals respectively. Each of those is a vector of games."
+  [n]
+  (let [initial-wb (make-wb n)
+        wb-and-lb (make-lb initial-wb)
+        grand-finals (make-gf (:wb wb-and-lb) (:lb wb-and-lb))]
+    (assoc wb-and-lb
+           :gf grand-finals)))
 
 
 ;; ------------------------
