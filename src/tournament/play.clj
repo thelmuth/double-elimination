@@ -1,6 +1,5 @@
 (ns tournament.play
-  (:require [clojure.pprint :as pprint]
-            [tournament.double-elim :as de]
+  (:require [tournament.double-elim :as de]
             [tournament.players :as players]))
 
 ;; ------------------------
@@ -140,14 +139,3 @@
                       (= right-seed :BYE) left-seed
                       :else (winner-fn left-seed right-seed (:players tournament)))]
     (record-result tournament bracket number winner-seed)))
-
-
-(comment
-
-  (make-tournament "data/very_short_example_seeding.csv")
-
-  (pprint/pprint (make-tournament "test/resources/very_very_short.csv"))
-
-  (de/make-match :WB 2 14 [:TBD :TBD] )
-
-  )

@@ -13,14 +13,11 @@ To Do
 - [x] `record-result` — sets `:winner`/`:loser` and advances players to next matches
 - [x] `play-match` — drives a match with a pluggable `winner-fn`
 - [x] `cli-winner-fn` — prompts user for input via stdin
+- [x] `higher-seed-wins` — deterministic winner function for testing/simulation
+- [x] `:BYE` handling in `play-match` (winner fns only receive integer seeds)
+- [x] **Play order** — `ready-to-play?` predicate and `ready-matches` with `:wb-first`/`:interleaved` and `:in-order`/`:random` options
 
 ## Next up
-
-- [ ] **Play order** — function(s) to determine which matches are ready to play (both
-  players known, not yet played). Support configurable orderings:
-  - All WB then all LB
-  - Interleaved: WB round N, then LB rounds 2N-1 and 2N
-  - In-order within a round vs. random within a round
 
 - [ ] **Play through full tournament** — top-level loop that repeatedly picks the next
   match per the chosen play order and plays it until the GF is complete
