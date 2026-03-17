@@ -28,6 +28,10 @@ To Do
 - [ ] **Save/load** — serialize tournament map to EDN file; auto-save after each match;
   load from file to resume
 
+- [ ] **Edit a result** - make it so that the user can edit a previously decided match.
+  I only expect to use this in cases where I made a recent mistake, and not when the
+  players in the match will have already played future matches.
+
 ## Later
 
 - [ ] **ASCII art bracket display** — print a readable text representation of the

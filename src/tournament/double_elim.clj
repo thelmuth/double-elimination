@@ -64,6 +64,20 @@
 ;; Match creation
 ;; ------------------------
 
+(def match-key-order
+  (let [ks [:bracket :round :number :players :winner :loser
+            :prev-left :prev-right :next-winner :next-loser]]
+    (zipmap ks (range))))
+
+(defn- match-key-comparator
+  "Comparator to set sort order of matches"
+  [a b]
+  (let [pos-cmp (compare (get match-key-order a)
+                         (get match-key-order b))]
+    (if (zero? pos-cmp)
+      (compare (str a) (str b))
+      pos-cmp)))
+
 (defn make-match
   "Makes a map to store a single match. Explanation of keys:
    :id - string id of this match. Should be WB-Mn for the nth match in the winner's bracket, LB-Mn for the nth match in the loser's bracket, and GF for grand finals
@@ -78,16 +92,17 @@
    :prev-right - Same as above, except for the second player
    "
   [bracket round number players]
-  {:number number
-   :round round
-   :bracket bracket
-   :players players
-   :winner nil
-   :loser nil
-   :next-winner nil
-   :next-loser nil
-   :prev-left nil
-   :prev-right nil})
+  (sorted-map-by match-key-comparator
+                 :number number
+                 :round round
+                 :bracket bracket
+                 :players players
+                 :winner nil
+                 :loser nil
+                 :next-winner nil
+                 :next-loser nil
+                 :prev-left nil
+                 :prev-right nil))
 
 ;; ------------------------
 ;; Winner’s Bracket
@@ -191,7 +206,6 @@
                  (vec (concat (subvec (vec v) half) (subvec (vec v) 0 half))))
     v))
 
-
 ;; ------------------------
 ;; Losers Bracket
 ;; ------------------------
@@ -291,7 +305,6 @@
                  (concat lb this-round-lb)
                  this-round-lb))))))
 
-
 ;; ------------------------
 ;; Grand Finals
 ;; ------------------------
@@ -322,7 +335,7 @@
 
 
 ;; ------------------------
-;; Not sure if I still need any of this:
+;; TMH: Not sure if I still need any of this:
 ;; ------------------------
 
 (defn wb-by-round-ordered

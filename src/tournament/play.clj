@@ -1,5 +1,6 @@
 (ns tournament.play
   (:require [clojure.string :as str]
+            [clojure.pprint :as pprint]
             [tournament.double-elim :as de]
             [tournament.players :as players]))
 
@@ -32,6 +33,11 @@
      number     - integer match number within that bracket"
   [tournament bracket number]
   (get-in tournament [bracket number]))
+
+;; TMH: I don't love that set-match changes the whole map out. It seems like
+;; it would be better to have specific functions for specific usecases,
+;; namely setting the players of a match (when they're previously [:TBD :TBD]),
+;; and for setting the :winner ald :loser when the game has been played
 
 (defn- set-match
   "Return tournament with the match at bracket/number replaced by match.
@@ -138,6 +144,9 @@
 
   (make-tournament "data/very_short_example_seeding.csv")
 
-  (make-tournament "test/resources/very_very_short.csv")
+  (pprint/pprint (make-tournament "test/resources/very_very_short.csv"))
+
+  (de/make-match :WB 2 14 [:TBD :TBD] )
+
 
   )
