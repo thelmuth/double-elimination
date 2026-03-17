@@ -129,16 +129,17 @@
      tournament - the full tournament map
      bracket    - keyword :WB, :LB, or :GF
      number     - integer match number within that bracket
-     winner-fn  - function of [seed1 seed2 players] that returns the winning seed;
+     winner-fn  - function of [seed1 seed2 players match] that returns the winning seed;
                   seed1/seed2 are integer seeds, players is the tournament's
-                  1-indexed player vector; not called when either player is :BYE"
+                  1-indexed player vector, match is the full match map;
+                  not called when either player is :BYE"
   [tournament bracket number winner-fn]
   (let [match       (get-match tournament bracket number)
         [left-seed right-seed] (:players match)
         winner-seed (cond
                       (= left-seed :BYE)  right-seed
                       (= right-seed :BYE) left-seed
-                      :else (winner-fn left-seed right-seed (:players tournament)))]
+                      :else (winner-fn left-seed right-seed (:players tournament) match))]
     (record-result tournament bracket number winner-seed)))
 
 ;; ------------------------

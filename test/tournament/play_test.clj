@@ -173,14 +173,14 @@
 
 (deftest play-match-test
   (testing "always-first winner-fn picks seed in slot 0"
-    (let [always-first (fn [s1 _s2 _players] s1)
+    (let [always-first (fn [s1 _s2 _players _match] s1)
           t  four-player-tournament
           t' (play/play-match t :WB 0 always-first)]
       (is (= 1 (:winner (play/get-match t' :WB 0))))
       (is (= 4 (:loser  (play/get-match t' :WB 0))))))
 
   (testing "always-second winner-fn picks seed in slot 1"
-    (let [always-second (fn [_s1 s2 _players] s2)
+    (let [always-second (fn [_s1 s2 _players _match] s2)
           t  four-player-tournament
           t' (play/play-match t :WB 0 always-second)]
       (is (= 4 (:winner (play/get-match t' :WB 0))))
