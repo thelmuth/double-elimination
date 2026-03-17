@@ -1,6 +1,5 @@
 (ns tournament.play
-  (:require [clojure.string :as str]
-            [clojure.pprint :as pprint]
+  (:require [clojure.pprint :as pprint]
             [tournament.double-elim :as de]
             [tournament.players :as players]))
 
@@ -139,25 +138,6 @@
         winner-seed (winner-fn left-seed right-seed (:players tournament))]
     (record-result tournament bracket number winner-seed)))
 
-(defn cli-winner-fn
-  "Returns a winner-picking function compatible with play-match. Displays both
-   players, prompts the user to enter 1 or 2, and returns the winning seed.
-
-   Args:
-     player->str - function of [player-map] that returns a display string for a player"
-  [player->str]
-  (fn [seed1 seed2 players]
-    (println (str "1: " (player->str (nth players seed1))))
-    (println (str "2: " (player->str (nth players seed2))))
-    (print "Winner (1 or 2): ")
-    (flush)
-    (loop []
-      (let [input (str/trim (read-line))]
-        (case input
-          "1" seed1
-          "2" seed2
-          (do (println "Please enter 1 or 2.")
-              (recur)))))))
 
 (comment
 

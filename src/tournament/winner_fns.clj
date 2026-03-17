@@ -1,0 +1,32 @@
+(ns tournament.winner-fns
+  (:require [clojure.string :as str]))
+
+(defn higher-seed-wins
+  "Winner function that always returns the higher-seeded (lower seed number) player.
+
+   Args:
+     left-seed  - integer seed of the left player
+     right-seed - integer seed of the right player
+     players    - the tournament's 1-indexed player vector (unused)"
+  [left-seed right-seed _players]
+  (min left-seed right-seed))
+
+(defn cli-winner-fn
+  "Returns a winner-picking function compatible with play-match. Displays both
+   players, prompts the user to enter 1 or 2, and returns the winning seed.
+
+   Args:
+     player->str - function of [player-map] that returns a display string for a player"
+  [player->str]
+  (fn [left-seed right-seed players]
+    (println (str "a: " (player->str (nth players left-seed))))
+    (println (str "b: " (player->str (nth players right-seed))))
+    (print "Winner (a or b): ")
+    (flush)
+    (loop []
+      (let [input (str/trim (read-line))]
+        (case input
+          "a" left-seed
+          "b" right-seed
+          (do (println "Please enter a or b.")
+              (recur)))))))
