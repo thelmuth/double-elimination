@@ -102,12 +102,21 @@
      winner-seed  - integer seed of the winning player"
   [tournament bracket number winner-seed]
   (let [match (get-match tournament bracket number)
-        [left-seed right-seed] (:players match)
-        loser-seed (if (= winner-seed left-seed) right-seed left-seed)]
-    (-> tournament
+        [left-seed right-seed] (:players match)]
+    (when (= :TBD left-seed)
+      (throw (ex-info "Left player is TBD; match is not ready to play"
+                      {:bracket bracket :number number})))
+    (when (= :TBD right-seed)
+      (throw (ex-info "Right player is TBD; match is not ready to play"
+                      {:bracket bracket :number number})))
+    (when-not (or (= winner-seed left-seed) (= winner-seed right-seed))
+      (throw (ex-info "Winner is not one of the players in this match"
+                      {:bracket bracket :number number :winner-seed winner-seed :players [left-seed right-seed]})))
+    (let [loser-seed (if (= winner-seed left-seed) right-seed left-seed)]
+      (-> tournament
         (set-match-result bracket number winner-seed loser-seed)
         (advance-player (:next-winner match) winner-seed bracket number :winner)
-        (advance-player (:next-loser match)  loser-seed  bracket number :loser))))
+        (advance-player (:next-loser match)  loser-seed  bracket number :loser)))))
 
 ;; ------------------------
 ;; Playing matches

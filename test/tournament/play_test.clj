@@ -155,6 +155,20 @@
                (play/record-result :LB 1 2)
                (play/record-result :GF 0 2))))))
 
+(deftest record-result-exceptions-test
+  (testing "throws when left player is TBD"
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Left player is TBD"
+                          (play/record-result four-player-tournament :WB 2 1))))
+
+  (testing "throws when right player is TBD"
+    (let [t (play/record-result four-player-tournament :WB 0 1)] ; fills slot 0 of WB2, slot 1 still TBD
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Right player is TBD"
+                            (play/record-result t :WB 2 1)))))
+
+  (testing "throws when winner is not one of the players"
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Winner is not one of the players"
+                          (play/record-result four-player-tournament :WB 0 99)))))
+
 (deftest play-match-test
   (testing "always-first winner-fn picks seed in slot 0"
     (let [always-first (fn [s1 _s2 _players] s1)
