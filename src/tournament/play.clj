@@ -34,21 +34,31 @@
   [tournament bracket number]
   (get-in tournament [bracket number]))
 
-;; TMH: I don't love that set-match changes the whole map out. It seems like
-;; it would be better to have specific functions for specific usecases,
-;; namely setting the players of a match (when they're previously [:TBD :TBD]),
-;; and for setting the :winner ald :loser when the game has been played
-
-(defn- set-match
-  "Return tournament with the match at bracket/number replaced by match.
+(defn- set-match-player
+  "Place player seed into slot (0=left, 1=right) of the match at bracket/number.
 
    Args:
      tournament - the full tournament map
      bracket    - keyword :WB, :LB, or :GF
      number     - integer match number within that bracket
-     match      - the new match map to store at that position"
-  [tournament bracket number match]
-  (assoc-in tournament [bracket number] match))
+     slot       - 0 for left player, 1 for right player
+     seed       - integer seed of the player to place"
+  [tournament bracket number slot seed]
+  (assoc-in tournament [bracket number :players slot] seed))
+
+(defn- set-match-result
+  "Record winner and loser on the match at bracket/number.
+
+   Args:
+     tournament   - the full tournament map
+     bracket      - keyword :WB, :LB, or :GF
+     number       - integer match number within that bracket
+     winner-seed  - integer seed of the winning player
+     loser-seed   - integer seed of the losing player"
+  [tournament bracket number winner-seed loser-seed]
+  (-> tournament
+      (assoc-in [bracket number :winner] winner-seed)
+      (assoc-in [bracket number :loser] loser-seed)))
 
 ;; ------------------------
 ;; Recording results and advancing players
@@ -77,9 +87,8 @@
                         (= from-ref (:prev-left next-match))  0
                         (= from-ref (:prev-right next-match)) 1
                         :else (throw (ex-info "Could not determine slot for advancing player"
-                                              {:next-ref next-ref :from-ref from-ref})))
-          updated-match (assoc next-match :players (assoc (:players next-match) player-slot seed))]
-      (set-match tournament (:bracket next-ref) (:number next-ref) updated-match))))
+                                              {:next-ref next-ref :from-ref from-ref})))]
+      (set-match-player tournament (:bracket next-ref) (:number next-ref) player-slot seed))))
 
 (defn record-result
   "Record the result of a match, returning an updated tournament with :winner
@@ -95,7 +104,7 @@
         [left-seed right-seed] (:players match)
         loser-seed (if (= winner-seed left-seed) right-seed left-seed)]
     (-> tournament
-        (set-match bracket number (assoc match :winner winner-seed :loser loser-seed))
+        (set-match-result bracket number winner-seed loser-seed)
         (advance-player (:next-winner match) winner-seed bracket number :winner)
         (advance-player (:next-loser match)  loser-seed  bracket number :loser))))
 
