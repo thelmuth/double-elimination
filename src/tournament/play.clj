@@ -95,3 +95,11 @@
           "2" seed2
           (do (println "Please enter 1 or 2.")
               (recur)))))))
+
+(comment
+
+  (make-tournament "data/very_short_example_seeding.csv")
+
+  (make-tournament "test/resources/very_very_short.csv")
+
+  )
