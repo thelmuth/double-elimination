@@ -258,7 +258,7 @@
 
 (defn make-lb
   "Build a full, precomputed Losers Bracket for `n` players given `wb` (vector of WB matches).
-   Returns {:wb updated-wb :lb lb-matches} with LB matches in round order and WB matches updated
+   Returns {:WB updated-wb :LB lb-matches} with LB matches in round order and WB matches updated
    with :next-loser where appropriate."
   [wb]
   (let [wb-by-round (group-by :round wb)]
@@ -286,7 +286,7 @@
                                          (set-wb-next-loser-from-lb-match lb-match :prev-right)))
                                    wb
                                    final-lb)]
-            {:wb updated-wb :lb final-lb})
+            {:WB updated-wb :LB final-lb})
           (recur (inc round)
                  (concat lb this-round-lb)
                  this-round-lb))))))
@@ -311,14 +311,14 @@
 
 (defn make-double-elimination
   "Makes full double elimination tournament with n players.
-   Returns map with keys :wb, :lb, and :gf for the winner's bracket, loser's
+   Returns map with keys :WB, :LB, and :GF for the winner's bracket, loser's
    bracket, and grand finals respectively. Each of those is a vector of games."
   [n]
   (let [initial-wb (make-wb n)
         wb-and-lb (make-lb initial-wb)
-        grand-finals (make-gf (:wb wb-and-lb) (:lb wb-and-lb))]
+        grand-finals (make-gf (:WB wb-and-lb) (:LB wb-and-lb))]
     (assoc wb-and-lb
-           :gf grand-finals)))
+           :GF grand-finals)))
 
 
 ;; ------------------------

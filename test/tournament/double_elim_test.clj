@@ -148,7 +148,7 @@
   (testing "first round of losers bracket"
     ;; test 4 players
     (let [num-players 4
-          {:keys [lb]} (de/make-lb (de/make-wb num-players))]
+          {lb :LB} (de/make-lb (de/make-wb num-players))]
       (is (= [(assoc (de/make-match :LB 1 0 [:TBD :TBD]) ;; LB round 1
                      :prev-left {:bracket :WB :number 0 :result :loser}
                      :prev-right {:bracket :WB :number 1 :result :loser}
@@ -157,7 +157,7 @@
 
     ;; test 8 players
     (let [num-players 8
-          {:keys [lb]} (de/make-lb (de/make-wb num-players))]
+          {lb :LB} (de/make-lb (de/make-wb num-players))]
       (is (= [(assoc (de/make-match :LB 1 0 [:TBD :TBD]) ;; LB round 1
                      :prev-left {:bracket :WB :number 0 :result :loser}
                      :prev-right {:bracket :WB :number 1 :result :loser}
@@ -170,7 +170,7 @@
 
     ;; test 13 players
     (let [num-players 13
-          {:keys [lb]} (de/make-lb (de/make-wb num-players))]
+          {lb :LB} (de/make-lb (de/make-wb num-players))]
       (is (= [(assoc (de/make-match :LB 1 0 [:TBD :TBD]) ;; LB round 1
                      :prev-left {:bracket :WB :number 0 :result :loser}
                      :prev-right {:bracket :WB :number 1 :result :loser}
@@ -192,7 +192,7 @@
   (testing "first 2 rounds of losers bracket, and full winners bracket"
     (testing "- 4 players"
       (let [num-players 4
-            {:keys [wb lb]} (de/make-lb (de/make-wb num-players))]
+            {wb :WB lb :LB} (de/make-lb (de/make-wb num-players))]
         (is (= [(assoc (de/make-match :WB 1 0 [1 4])
                        :next-winner {:bracket :WB :number 2}
                        :next-loser  {:bracket :LB :number 0})
@@ -217,7 +217,7 @@
 
     (testing "- 8 players"
       (let [num-players 8
-            {:keys [wb lb]} (de/make-lb (de/make-wb num-players))]
+            {wb :WB lb :LB} (de/make-lb (de/make-wb num-players))]
         (is (= [(assoc (de/make-match :WB 1 0 [1 8])
                        :next-winner {:bracket :WB :number 4}
                        :next-loser {:bracket :LB :number 0})
@@ -271,7 +271,7 @@
   (testing "full losers bracket"
     (testing "- 4 players"
       (let [num-players 4
-            {:keys [wb lb]} (de/make-lb (de/make-wb num-players))]
+            {wb :WB lb :LB} (de/make-lb (de/make-wb num-players))]
         (is (= [(assoc (de/make-match :WB 1 0 [1 4])
                        :next-winner {:bracket :WB :number 2}
                        :next-loser  {:bracket :LB :number 0})
@@ -296,7 +296,7 @@
 
     (testing "- 8 players"
       (let [num-players 8
-            {:keys [wb lb]} (de/make-lb (de/make-wb num-players))]
+            {wb :WB lb :LB} (de/make-lb (de/make-wb num-players))]
         (is (= [(assoc (de/make-match :WB 1 0 [1 8])
                        :next-winner {:bracket :WB :number 4}
                        :next-loser {:bracket :LB :number 0})
@@ -360,7 +360,7 @@
 (deftest make-gf-test
   (testing "4 players"
     (let [wb (de/make-wb 4)
-          {:keys [lb]} (de/make-lb wb)]
+          {lb :LB} (de/make-lb wb)]
       (is (= [(assoc (de/make-match :GF 1 0 [:TBD :TBD])
                      :prev-left  {:bracket :WB :number 2 :result :winner}
                      :prev-right {:bracket :LB :number 1 :result :winner})]
@@ -368,7 +368,7 @@
 
   (testing "8 players"
     (let [wb (de/make-wb 8)
-          {:keys [lb]} (de/make-lb wb)]
+          {lb :LB} (de/make-lb wb)]
       (is (= [(assoc (de/make-match :GF 1 0 [:TBD :TBD])
                      :prev-left  {:bracket :WB :number 6 :result :winner}
                      :prev-right {:bracket :LB :number 5 :result :winner})]
@@ -376,7 +376,7 @@
 
 (deftest make-double-elimination-test
   (testing "4 players"
-    (let [{:keys [wb lb gf]} (de/make-double-elimination 4)]
+    (let [{wb :WB lb :LB gf :GF} (de/make-double-elimination 4)]
       (is (= [(assoc (de/make-match :WB 1 0 [1 4])
                      :next-winner {:bracket :WB :number 2}
                      :next-loser  {:bracket :LB :number 0})
@@ -404,7 +404,7 @@
              gf))))
 
   (testing "8 players"
-    (let [{:keys [wb lb gf]} (de/make-double-elimination 8)]
+    (let [{wb :WB lb :LB gf :GF} (de/make-double-elimination 8)]
       (is (= [;; round 1
               (assoc (de/make-match :WB 1 0 [1 8])
                      :next-winner {:bracket :WB :number 4}
@@ -471,7 +471,7 @@
              gf))))
 
   (testing "16 players"
-    (let [{:keys [wb lb gf]} (de/make-double-elimination 16)]
+    (let [{wb :WB lb :LB gf :GF} (de/make-double-elimination 16)]
       (is (= [;; round 1
               (assoc (de/make-match :WB 1 0 [1 16])
                      :next-winner {:bracket :WB :number 8}
@@ -605,7 +605,7 @@
              gf))))
 
   (testing "13 players"
-    (let [{:keys [wb lb gf]} (de/make-double-elimination 13)]
+    (let [{wb :WB lb :LB gf :GF} (de/make-double-elimination 13)]
       (is (= [;; round 1 -- same as 16 players except seeds 14, 15, 16 replaced with :BYE
               (assoc (de/make-match :WB 1 0 [1 :BYE])
                      :next-winner {:bracket :WB :number 8}
@@ -738,7 +738,7 @@
              gf))))
 
   (testing "32 players"
-    (let [{:keys [wb lb gf]} (de/make-double-elimination 32)]
+    (let [{wb :WB lb :LB gf :GF} (de/make-double-elimination 32)]
       (is (= [;; WB round 1
               (assoc (de/make-match :WB 1 0 [1 32])
                      :next-winner {:bracket :WB :number 16}
@@ -1003,7 +1003,7 @@
              gf))))
 
   (testing "64 players"
-    (let [{:keys [wb lb gf]} (de/make-double-elimination 64)]
+    (let [{wb :WB lb :LB gf :GF} (de/make-double-elimination 64)]
       (is (= [;; WB round 1 -- seeding order for 64 players
               (assoc (de/make-match :WB 1 0 [1 64])
                      :next-winner {:bracket :WB :number 32}
