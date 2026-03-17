@@ -40,11 +40,3 @@
    Provide your own function for custom formatting."
   [player]
   (str/join " - " (vals player)))
-
-
-(comment
-  
-  (keyword "seed group")
-  
-  
-  )
