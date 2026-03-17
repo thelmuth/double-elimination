@@ -1,5 +1,6 @@
 (ns tournament.play
   (:require [tournament.double-elim :as de]
+            [tournament.play-order :as order]
             [tournament.players :as players]))
 
 ;; ------------------------
@@ -139,3 +140,30 @@
                       (= right-seed :BYE) left-seed
                       :else (winner-fn left-seed right-seed (:players tournament)))]
     (record-result tournament bracket number winner-seed)))
+
+;; ------------------------
+;; Playing full tournament
+;; ------------------------
+
+(defn tournament-complete?
+  "Returns true when the GF match has a winner."
+  [tournament]
+  (some? (:winner (get-match tournament :GF 0))))
+
+(defn play-tournament
+  "Play through the entire tournament using winner-fn to decide each match.
+   Returns the completed tournament.
+
+   Args:
+     tournament - the full tournament map
+     winner-fn  - function of [seed1 seed2 players] that returns the winning seed
+     opts       - map passed to ready-matches (:bracket-order, :within-round)"
+  [tournament winner-fn opts]
+  (loop [tournament tournament]
+    (if (tournament-complete? tournament)
+      tournament
+      (let [next-match (first (order/ready-matches tournament opts))]
+        (when (nil? next-match)
+          (throw (ex-info "No ready match found but tournament is not complete"
+                          {:tournament tournament})))
+        (recur (play-match tournament (:bracket next-match) (:number next-match) winner-fn))))))

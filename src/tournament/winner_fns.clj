@@ -19,6 +19,7 @@
      player->str - function of [player-map] that returns a display string for a player"
   [player->str]
   (fn [left-seed right-seed players]
+    (println "\n-------------------------------------------")
     (println "A:" (player->str (nth players left-seed)) "\n")
     (println "B:" (player->str (nth players right-seed)) "\n")
     (print "Winner (A or B): ")

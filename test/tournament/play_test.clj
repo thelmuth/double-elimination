@@ -559,6 +559,31 @@
                             wfn/higher-seed-wins)))))
 
 
+(deftest tournament-complete-test
+  (testing "returns false on a fresh tournament"
+    (is (false? (play/tournament-complete? four-player-tournament))))
+
+  (testing "returns true after all matches are played"
+    (let [completed (-> four-player-tournament
+                        (play/record-result :WB 0 1)
+                        (play/record-result :WB 1 2)
+                        (play/record-result :LB 0 4)
+                        (play/record-result :WB 2 1)
+                        (play/record-result :LB 1 4)
+                        (play/record-result :GF 0 1))]
+      (is (true? (play/tournament-complete? completed))))))
+
+(deftest play-tournament-test
+  (testing "seed 1 wins everything with higher-seed-wins"
+    (let [completed (play/play-tournament four-player-tournament wfn/higher-seed-wins {})]
+      (is (play/tournament-complete? completed))
+      (is (= 1 (:winner (first (:GF completed)))))))
+
+  (testing ":wb-first and :interleaved produce same final state with deterministic winner-fn"
+    (let [wb-first    (play/play-tournament four-player-tournament wfn/higher-seed-wins {:bracket-order :wb-first})
+          interleaved (play/play-tournament four-player-tournament wfn/higher-seed-wins {:bracket-order :interleaved})]
+      (is (= wb-first interleaved)))))
+
 (comment
 
   ;; TMH: Keep this around for now. It shows how to use play-match
@@ -573,6 +598,15 @@
                    :WB
                    0
                    (wfn/cli-winner-fn players/default-player->str))
+
+  (play/play-tournament (play/make-tournament "test/resources/very_very_short.csv")
+                        wfn/higher-seed-wins
+                        {})
+  
+  (play/play-tournament (play/make-tournament "test/resources/very_very_short.csv")
+                        (wfn/cli-winner-fn players/default-player->str)
+                        {})
+
 
   ;
   )
