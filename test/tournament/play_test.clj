@@ -83,7 +83,77 @@
                 (play/record-result :WB 2 1)   ; 1 beats 2 (WB final)
                 (play/record-result :LB 1 4)   ; 4 beats 2 (LB final)
                 )]
-      (is (= [1 4] (:players (play/get-match t :GF 0)))))))
+      (is (= [1 4] (:players (play/get-match t :GF 0))))))
+  
+  (testing "full tournament of record-results"
+    (is (= {:GF [{:bracket :GF,
+                  :loser 4,
+                  :next-loser nil,
+                  :next-winner nil,
+                  :number 0,
+                  :players [4 2],
+                  :prev-left {:bracket :WB, :number 2, :result :winner},
+                  :prev-right {:bracket :LB, :number 1, :result :winner},
+                  :round 1,
+                  :winner 2}],
+            :LB [{:bracket :LB,
+                  :loser 1,
+                  :next-loser nil,
+                  :next-winner {:bracket :LB, :number 1},
+                  :number 0,
+                  :players [1 3],
+                  :prev-left {:bracket :WB, :number 0, :result :loser},
+                  :prev-right {:bracket :WB, :number 1, :result :loser},
+                  :round 1,
+                  :winner 3}
+                 {:bracket :LB,
+                  :loser 3,
+                  :next-loser nil,
+                  :next-winner {:bracket :GF, :number 0},
+                  :number 1,
+                  :players [2 3],
+                  :prev-left {:bracket :WB, :number 2, :result :loser},
+                  :prev-right {:bracket :LB, :number 0, :result :winner},
+                  :round 2,
+                  :winner 2}],
+            :WB [{:bracket :WB,
+                  :loser 1,
+                  :next-loser {:bracket :LB, :number 0},
+                  :next-winner {:bracket :WB, :number 2},
+                  :number 0,
+                  :players [1 4],
+                  :prev-left nil,
+                  :prev-right nil,
+                  :round 1,
+                  :winner 4}
+                 {:bracket :WB,
+                  :loser 3,
+                  :next-loser {:bracket :LB, :number 0},
+                  :next-winner {:bracket :WB, :number 2},
+                  :number 1,
+                  :players [2 3],
+                  :prev-left nil,
+                  :prev-right nil,
+                  :round 1,
+                  :winner 2}
+                 {:bracket :WB,
+                  :loser 2,
+                  :next-loser {:bracket :LB, :number 1},
+                  :next-winner {:bracket :GF, :number 0},
+                  :number 2,
+                  :players [4 2],
+                  :prev-left {:bracket :WB, :number 0, :result :winner},
+                  :prev-right {:bracket :WB, :number 1, :result :winner},
+                  :round 2,
+                  :winner 4}],
+            :players [nil "Alice" "Bob" "Carol" "Dave"]}
+           (-> four-player-tournament
+               (play/record-result :WB 0 4)
+               (play/record-result :WB 1 2)
+               (play/record-result :WB 2 4)
+               (play/record-result :LB 0 3)
+               (play/record-result :LB 1 2)
+               (play/record-result :GF 0 2))))))
 
 (deftest play-match-test
   (testing "always-first winner-fn picks seed in slot 0"

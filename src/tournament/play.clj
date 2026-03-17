@@ -73,7 +73,8 @@
    Args:
      tournament   - the full tournament map
      next-ref     - map {:bracket :WB/:LB/:GF :number N} pointing to the destination match,
-                    or nil if there is no next match (e.g. the tournament winner)
+                    or nil if there is no next match (e.g. the tournament winner or a loser
+                    in the LB)
      seed         - integer seed of the player being advanced
      from-bracket - bracket keyword of the match just played (:WB, :LB, or :GF)
      from-number  - match number of the match just played
