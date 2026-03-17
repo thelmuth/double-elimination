@@ -1,7 +1,9 @@
 (ns tournament.play-test
   (:require [clojure.test :refer [deftest is testing]]
             [tournament.play :as play]
-            [tournament.double-elim :as de]))
+            [tournament.winner-fns :as wfn]
+            [tournament.double-elim :as de]
+            [tournament.players :as players]))
 
 ;; Use a 4-player bracket for most tests -- small enough to reason about by hand.
 ;;
@@ -84,7 +86,7 @@
                 (play/record-result :LB 1 4)   ; 4 beats 2 (LB final)
                 )]
       (is (= [1 4] (:players (play/get-match t :GF 0))))))
-  
+
   (testing "full tournament of record-results"
     (is (= {:GF [{:bracket :GF,
                   :loser 4,
@@ -182,4 +184,395 @@
           t  four-player-tournament
           t' (play/play-match t :WB 0 always-second)]
       (is (= 4 (:winner (play/get-match t' :WB 0))))
-      (is (= 1 (:loser  (play/get-match t' :WB 0)))))))
+      (is (= 1 (:loser  (play/get-match t' :WB 0))))))
+
+  (testing "full tournament after play-match"
+    (is (= {:GF [{:bracket :GF,
+                  :round 1,
+                  :number 0,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 6, :result :winner},
+                  :prev-right {:bracket :LB, :number 5, :result :winner},
+                  :next-winner nil,
+                  :next-loser nil}],
+            :LB [{:bracket :LB,
+                  :round 1,
+                  :number 0,
+                  :players [:TBD 5],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 0, :result :loser},
+                  :prev-right {:bracket :WB, :number 1, :result :loser},
+                  :next-winner {:bracket :LB, :number 2},
+                  :next-loser nil}
+                 {:bracket :LB,
+                  :round 1,
+                  :number 1,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 2, :result :loser},
+                  :prev-right {:bracket :WB, :number 3, :result :loser},
+                  :next-winner {:bracket :LB, :number 3},
+                  :next-loser nil}
+                 {:bracket :LB,
+                  :round 2,
+                  :number 2,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 5, :result :loser},
+                  :prev-right {:bracket :LB, :number 0, :result :winner},
+                  :next-winner {:bracket :LB, :number 4},
+                  :next-loser nil}
+                 {:bracket :LB,
+                  :round 2,
+                  :number 3,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 4, :result :loser},
+                  :prev-right {:bracket :LB, :number 1, :result :winner},
+                  :next-winner {:bracket :LB, :number 4},
+                  :next-loser nil}
+                 {:bracket :LB,
+                  :round 3,
+                  :number 4,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :LB, :number 2, :result :winner},
+                  :prev-right {:bracket :LB, :number 3, :result :winner},
+                  :next-winner {:bracket :LB, :number 5},
+                  :next-loser nil}
+                 {:bracket :LB,
+                  :round 4,
+                  :number 5,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 6, :result :loser},
+                  :prev-right {:bracket :LB, :number 4, :result :winner},
+                  :next-winner {:bracket :GF, :number 0},
+                  :next-loser nil}],
+            :WB [{:bracket :WB,
+                  :round 1,
+                  :number 0,
+                  :players [1 :BYE],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left nil,
+                  :prev-right nil,
+                  :next-winner {:bracket :WB, :number 4},
+                  :next-loser {:bracket :LB, :number 0}}
+                 {:bracket :WB,
+                  :round 1,
+                  :number 1,
+                  :players [4 5],
+                  :winner 4,
+                  :loser 5,
+                  :prev-left nil,
+                  :prev-right nil,
+                  :next-winner {:bracket :WB, :number 4},
+                  :next-loser {:bracket :LB, :number 0}}
+                 {:bracket :WB,
+                  :round 1,
+                  :number 2,
+                  :players [2 :BYE],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left nil,
+                  :prev-right nil,
+                  :next-winner {:bracket :WB, :number 5},
+                  :next-loser {:bracket :LB, :number 1}}
+                 {:bracket :WB,
+                  :round 1,
+                  :number 3,
+                  :players [3 6],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left nil,
+                  :prev-right nil,
+                  :next-winner {:bracket :WB, :number 5},
+                  :next-loser {:bracket :LB, :number 1}}
+                 {:bracket :WB,
+                  :round 2,
+                  :number 4,
+                  :players [:TBD 4],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 0, :result :winner},
+                  :prev-right {:bracket :WB, :number 1, :result :winner},
+                  :next-winner {:bracket :WB, :number 6},
+                  :next-loser {:bracket :LB, :number 3}}
+                 {:bracket :WB,
+                  :round 2,
+                  :number 5,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 2, :result :winner},
+                  :prev-right {:bracket :WB, :number 3, :result :winner},
+                  :next-winner {:bracket :WB, :number 6},
+                  :next-loser {:bracket :LB, :number 2}}
+                 {:bracket :WB,
+                  :round 3,
+                  :number 6,
+                  :players [:TBD :TBD],
+                  :winner nil,
+                  :loser nil,
+                  :prev-left {:bracket :WB, :number 4, :result :winner},
+                  :prev-right {:bracket :WB, :number 5, :result :winner},
+                  :next-winner {:bracket :GF, :number 0},
+                  :next-loser {:bracket :LB, :number 5}}],
+            :players [nil
+                      {:album "OC ReMix, Secret of Mana",
+                       :artist "Nase",
+                       :genre "Game",
+                       :name "Step Off My Flower Bed",
+                       :plays "98",
+                       :seed "1",
+                       :seed-group "0"}
+                      {:album "OC ReMix, Chrono Trigger",
+                       :artist "Star Salzman, Paul Baxter",
+                       :genre "Game",
+                       :name "Forever Until Tomorrow",
+                       :plays "63",
+                       :seed "2",
+                       :seed-group "0"}
+                      {:album "OC ReMix, Zelda 03: A Link to the Past",
+                       :artist "Insert Rupee (Ben Briggs, halc)",
+                       :genre "Game",
+                       :name "Great Job!",
+                       :plays "61",
+                       :seed "3",
+                       :seed-group "0"}
+                      {:album "Mighty Switch Force! 2 OST",
+                       :artist "Jake Kaufman",
+                       :genre "Game",
+                       :name "Dalmatian Station",
+                       :plays "67",
+                       :seed "4",
+                       :seed-group "0"}
+                      {:album "Album 2 - Choose Your Character!",
+                       :artist "The 8-Bit Big Band",
+                       :genre "Game",
+                       :name "Luigi's Mansion Theme (From \"Luigi's Mansion\")",
+                       :plays "26",
+                       :seed "393",
+                       :seed-group "5"}
+                      {:album "test",
+                       :artist "test",
+                       :genre "metal",
+                       :name "test",
+                       :plays "123",
+                       :seed "5",
+                       :seed-group "1"}]}
+           (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
+                            :WB
+                            1
+                            wfn/higher-seed-wins))))
+
+  (testing "full tournament after play-match with a :BYE"
+    (is (= {:GF [{:bracket :GF,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner nil,
+                  :number 0,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 6, :result :winner},
+                  :prev-right {:bracket :LB, :number 5, :result :winner},
+                  :round 1,
+                  :winner nil}],
+            :LB [{:bracket :LB,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner {:bracket :LB, :number 2},
+                  :number 0,
+                  :players [:BYE :TBD],
+                  :prev-left {:bracket :WB, :number 0, :result :loser},
+                  :prev-right {:bracket :WB, :number 1, :result :loser},
+                  :round 1,
+                  :winner nil}
+                 {:bracket :LB,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner {:bracket :LB, :number 3},
+                  :number 1,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 2, :result :loser},
+                  :prev-right {:bracket :WB, :number 3, :result :loser},
+                  :round 1,
+                  :winner nil}
+                 {:bracket :LB,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner {:bracket :LB, :number 4},
+                  :number 2,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 5, :result :loser},
+                  :prev-right {:bracket :LB, :number 0, :result :winner},
+                  :round 2,
+                  :winner nil}
+                 {:bracket :LB,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner {:bracket :LB, :number 4},
+                  :number 3,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 4, :result :loser},
+                  :prev-right {:bracket :LB, :number 1, :result :winner},
+                  :round 2,
+                  :winner nil}
+                 {:bracket :LB,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner {:bracket :LB, :number 5},
+                  :number 4,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :LB, :number 2, :result :winner},
+                  :prev-right {:bracket :LB, :number 3, :result :winner},
+                  :round 3,
+                  :winner nil}
+                 {:bracket :LB,
+                  :loser nil,
+                  :next-loser nil,
+                  :next-winner {:bracket :GF, :number 0},
+                  :number 5,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 6, :result :loser},
+                  :prev-right {:bracket :LB, :number 4, :result :winner},
+                  :round 4,
+                  :winner nil}],
+            :WB [{:bracket :WB,
+                  :loser :BYE,
+                  :next-loser {:bracket :LB, :number 0},
+                  :next-winner {:bracket :WB, :number 4},
+                  :number 0,
+                  :players [1 :BYE],
+                  :prev-left nil,
+                  :prev-right nil,
+                  :round 1,
+                  :winner 1}
+                 {:bracket :WB,
+                  :loser nil,
+                  :next-loser {:bracket :LB, :number 0},
+                  :next-winner {:bracket :WB, :number 4},
+                  :number 1,
+                  :players [4 5],
+                  :prev-left nil,
+                  :prev-right nil,
+                  :round 1,
+                  :winner nil}
+                 {:bracket :WB,
+                  :loser nil,
+                  :next-loser {:bracket :LB, :number 1},
+                  :next-winner {:bracket :WB, :number 5},
+                  :number 2,
+                  :players [2 :BYE],
+                  :prev-left nil,
+                  :prev-right nil,
+                  :round 1,
+                  :winner nil}
+                 {:bracket :WB,
+                  :loser nil,
+                  :next-loser {:bracket :LB, :number 1},
+                  :next-winner {:bracket :WB, :number 5},
+                  :number 3,
+                  :players [3 6],
+                  :prev-left nil,
+                  :prev-right nil,
+                  :round 1,
+                  :winner nil}
+                 {:bracket :WB,
+                  :loser nil,
+                  :next-loser {:bracket :LB, :number 3},
+                  :next-winner {:bracket :WB, :number 6},
+                  :number 4,
+                  :players [1 :TBD],
+                  :prev-left {:bracket :WB, :number 0, :result :winner},
+                  :prev-right {:bracket :WB, :number 1, :result :winner},
+                  :round 2,
+                  :winner nil}
+                 {:bracket :WB,
+                  :loser nil,
+                  :next-loser {:bracket :LB, :number 2},
+                  :next-winner {:bracket :WB, :number 6},
+                  :number 5,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 2, :result :winner},
+                  :prev-right {:bracket :WB, :number 3, :result :winner},
+                  :round 2,
+                  :winner nil}
+                 {:bracket :WB,
+                  :loser nil,
+                  :next-loser {:bracket :LB, :number 5},
+                  :next-winner {:bracket :GF, :number 0},
+                  :number 6,
+                  :players [:TBD :TBD],
+                  :prev-left {:bracket :WB, :number 4, :result :winner},
+                  :prev-right {:bracket :WB, :number 5, :result :winner},
+                  :round 3,
+                  :winner nil}],
+            :players [nil
+                      {:album "OC ReMix, Secret of Mana",
+                       :artist "Nase",
+                       :genre "Game",
+                       :name "Step Off My Flower Bed",
+                       :plays "98",
+                       :seed "1",
+                       :seed-group "0"}
+                      {:album "OC ReMix, Chrono Trigger",
+                       :artist "Star Salzman, Paul Baxter",
+                       :genre "Game",
+                       :name "Forever Until Tomorrow",
+                       :plays "63",
+                       :seed "2",
+                       :seed-group "0"}
+                      {:album "OC ReMix, Zelda 03: A Link to the Past",
+                       :artist "Insert Rupee (Ben Briggs, halc)",
+                       :genre "Game",
+                       :name "Great Job!",
+                       :plays "61",
+                       :seed "3",
+                       :seed-group "0"}
+                      {:album "Mighty Switch Force! 2 OST",
+                       :artist "Jake Kaufman",
+                       :genre "Game",
+                       :name "Dalmatian Station",
+                       :plays "67",
+                       :seed "4",
+                       :seed-group "0"}
+                      {:album "Album 2 - Choose Your Character!",
+                       :artist "The 8-Bit Big Band",
+                       :genre "Game",
+                       :name "Luigi's Mansion Theme (From \"Luigi's Mansion\")",
+                       :plays "26",
+                       :seed "393",
+                       :seed-group "5"}
+                      {:album "test", :artist "test", :genre "metal", :name "test", :plays "123", :seed "5", :seed-group "1"}]}
+           (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
+                            :WB
+                            0
+                            wfn/higher-seed-wins)))))
+
+
+(comment
+
+  ;; TMH: Keep this around for now. It shows how to use play-match
+  ;; with cli-winner-fn
+  (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
+                   :WB
+                   1
+                   (wfn/cli-winner-fn players/default-player->str))
+
+  ;; this one has a :BYE
+  (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
+                   :WB
+                   0
+                   (wfn/cli-winner-fn players/default-player->str))
+
+  ;
+  )

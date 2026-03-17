@@ -19,14 +19,14 @@
      player->str - function of [player-map] that returns a display string for a player"
   [player->str]
   (fn [left-seed right-seed players]
-    (println (str "a: " (player->str (nth players left-seed))))
-    (println (str "b: " (player->str (nth players right-seed))))
-    (print "Winner (a or b): ")
+    (println "A:" (player->str (nth players left-seed)) "\n")
+    (println "B:" (player->str (nth players right-seed)) "\n")
+    (print "Winner (A or B): ")
     (flush)
     (loop []
-      (let [input (str/trim (read-line))]
+      (let [input (str/lower-case (str/trim (read-line)))]
         (case input
           "a" left-seed
           "b" right-seed
-          (do (println "Please enter a or b.")
+          (do (println "Please enter A or B.")
               (recur)))))))
