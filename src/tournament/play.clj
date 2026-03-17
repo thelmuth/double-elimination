@@ -9,12 +9,12 @@
 
 (defn make-tournament
   "Create a full tournament from a CSV file of players in seeded order.
-   Returns a map with :players (1-indexed vector), :WB, :LB, :GF."
+   Returns a map with :players (1-indexed vector with nil at index 0), :WB, :LB, :GF."
   [players-file]
   (let [players (players/load-players players-file)
-        n (dec (count players))]
+        n (count players)]
     (assoc (de/make-double-elimination n)
-           :players players)))
+           :players (into [nil] players))))
 
 ;; ------------------------
 ;; Match lookup helpers
