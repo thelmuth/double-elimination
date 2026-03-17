@@ -1,15 +1,5 @@
 (ns tournament.double-elim)
 
-;; TO DO:
-;; - test full brackets and winners brackets on larger tournaments
-
-;; Notes for future:
-;; - when adapting for music tourney, make it so that players are provided by a CSV
-;;   that is automatically converted to a map with a key for each column, and also
-;;   provide a function that takes a player map and returns a string representation
-;;   That way, could be used for different types of tournaments
-
-
 ;; ------------------------
 ;; Utilities
 ;; ------------------------
@@ -171,6 +161,10 @@
 ;; ------------------------
 ;; Drop-order helpers
 ;; ------------------------
+
+;; I'm reducing the chances of rematches using different drop orders for
+;; winner bracket losers, borrowed from here:
+;; https://blog.start.gg/changes-in-the-world-of-brackets-695ecb777a4c
 
 (def drop-orders
   "Cycle of drop orders used for successive winner rounds."
