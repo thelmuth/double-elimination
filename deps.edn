@@ -1,6 +1,7 @@
 {:paths ["src"]
  :deps {org.clojure/clojure   {:mvn/version "1.12.1"}
-         org.clojure/data.csv {:mvn/version "1.1.1"}}
+        org.clojure/data.csv {:mvn/version "1.1.1"}}
  :aliases  {:test       {:extra-paths ["test"]
                          :extra-deps  {io.github.metabase/hawk {:mvn/version "1.0.13"}}
-                         :exec-fn     mb.hawk.core/find-and-run-tests-cli}}}
+                         :exec-fn     mb.hawk.core/find-and-run-tests-cli}
+            :run       {:main-opts ["-m" "tournament.core"]}}}

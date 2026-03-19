@@ -1,15 +1,56 @@
-Wishlist
-========
+# Double Elimination Tournament
 
-I would like to be able to take a
-CSV file of players -- mine will specifically be a CSV of songs, with info about artist, name, etc -- that are
-in a seeded order. Then, I want to create a double elimination tournament for those players. I think it would
-be best to keep the player info and the tournament separate, indexed by seed to the tournament, so that
-player info can be printed but isn't in the match maps. I would like to be able to play through all of the
-games, using user input to determine who wins each game. I would like to be able to save the tournament
-bracket and player info automatically after each game, and be able to easily load a tournament from a file. I
-can imagine different orders to play through games, and would like to be able to select different orders (such
-as all winner bracket then all loser bracket, or WB round 1 followed by LB round 1 and 2, then WB round 2 and
-LB round 3 and 4; or even random within a round vs in order within the round). Finally, I would like to be
-able to print visual representations of the bracket. I could imagine that using "ASCII art" format,
-though ideally I would love to make a SVG of the tournament for better visualization.
+Run a double elimination tournament from a CSV file of seeded players, with
+interactive match-by-match input via the command line.
+
+## Requirements
+
+- [Clojure CLI](https://clojure.org/guides/install_clojure)
+
+## CSV Format
+
+Your players CSV must have a header row. Rows are listed in seeded order (first
+row = seed 1, second row = seed 2, etc.). Any column names are supported.
+
+Example:
+
+```
+artist,title,year
+The Beatles,Hey Jude,1968
+David Bowie,Heroes,1977
+Led Zeppelin,Stairway to Heaven,1971
+The Rolling Stones,Paint It Black,1966
+```
+
+## Running a Tournament
+
+```
+clj -M:run path/to/players.csv
+```
+
+This will:
+1. Build a double elimination bracket seeded from your CSV
+2. Present each match interactively, showing the bracket, round, match number,
+   and both players with their seeds
+3. Prompt you to enter `A` or `B` to pick the winner of each match
+4. Continue until the Grand Finals is decided, then announce the winner
+
+### Example match prompt
+
+```
+----------------------------------------------
+    Winner Bracket  |  Round 1  |  Match 0
+----------------------------------------------
+
+A (seed 1): The Beatles - Hey Jude - 1968
+
+B (seed 4): The Rolling Stones - Paint It Black - 1966
+
+Winner (A or B):
+```
+
+## Running Tests
+
+```
+clj -X:test
+```
