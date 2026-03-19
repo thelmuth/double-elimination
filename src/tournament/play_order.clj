@@ -24,13 +24,15 @@
    (:number match)])
 
 (defn- interleaved-sort-key
-  "Sort key for :interleaved ordering: WB round N is grouped with LB rounds 2N-1 and 2N.
-   Returns [wave sub-order number], where sub-order is 0 for WB, 1 for odd LB, 2 for even LB."
+  "Sort key for :interleaved ordering.
+   Wave 1: WB round 1, then LB round 1.
+   Wave N (N >= 2): WB round N, then LB even round (WB dropdowns), then LB odd round (consolidation).
+   Returns [wave sub-order number], where sub-order is 0 for WB, 1 for even LB, 2 for odd LB (except round 1)."
   [match]
   (let [round (:round match)]
     (case (:bracket match)
       :WB [round 0 (:number match)]
-      :LB [(quot (inc round) 2) (if (odd? round) 1 2) (:number match)]
+      :LB [(quot (+ round 2) 2) (if (and (odd? round) (> round 1)) 2 1) (:number match)]
       :GF [Integer/MAX_VALUE 3 (:number match)])))
 
 ;; ------------------------
