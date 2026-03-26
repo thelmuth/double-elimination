@@ -11,7 +11,7 @@
   (let [players-file (first args)
         tournament   (play/make-tournament players-file)
         completed    (play/play-tournament tournament
-                                           (wfn/cli-winner-fn players/default-player->str)
+                                           (wfn/cli-winner-fn)
                                            {})
         winner-seed  (:winner (first (:GF completed)))
         winner       (nth (:players completed) winner-seed)]

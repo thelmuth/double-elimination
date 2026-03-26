@@ -23,7 +23,7 @@ To Do
 
 ## Next up
 
-- [ ] Better formatting for CLI information about the players. Formatted in columns, with player A on left and player B on right. Could even format as a table with consistent width of columns (wrapping to next line if necessary) and row labels based on the keys of the player map.
+- [x] Better formatting for CLI information about the players. Formatted in columns, with player A on left and player B on right. Could even format as a table with consistent width of columns (wrapping to next line if necessary) and row labels based on the keys of the player map.
 
 - [ ] **Save/load** — serialize tournament map to EDN file; auto-save after each match;
   load from file to resume

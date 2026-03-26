@@ -26,7 +26,7 @@
   (with-open [reader (io/reader filename)]
     (let [rows    (doall (csv/read-csv reader))
           headers (map (comp keyword #(str/replace % " " "-") str/lower-case str/trim) (first rows))
-          players (mapv (fn [row] (zipmap headers (map str/trim row))) (rest rows))]
+          players (mapv (fn [row] (apply array-map (interleave headers (map str/trim row)))) (rest rows))]
       players)))
 
 ;; ------------------------

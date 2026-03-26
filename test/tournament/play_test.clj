@@ -591,20 +591,20 @@
   (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
                    :WB
                    1
-                   (wfn/cli-winner-fn players/default-player->str))
+                   (wfn/cli-winner-fn))
 
   ;; this one has a :BYE
   (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
                    :WB
                    0
-                   (wfn/cli-winner-fn players/default-player->str))
+                   (wfn/cli-winner-fn))
 
   (play/play-tournament (play/make-tournament "test/resources/very_very_short.csv")
                         wfn/higher-seed-wins
                         {})
   
   (play/play-tournament (play/make-tournament "test/resources/very_very_short.csv")
-                        (wfn/cli-winner-fn players/default-player->str)
+                        (wfn/cli-winner-fn)
                         {})
 
 
