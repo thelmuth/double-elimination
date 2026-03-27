@@ -4,4 +4,5 @@
  :aliases  {:test       {:extra-paths ["test"]
                          :extra-deps  {io.github.metabase/hawk {:mvn/version "1.0.13"}}
                          :exec-fn     mb.hawk.core/find-and-run-tests-cli}
-            :run       {:main-opts ["-m" "tournament.core"]}}}
+            :start     {:main-opts ["-m" "tournament.core" "start"]}
+            :load      {:main-opts ["-m" "tournament.core" "load"]}}}

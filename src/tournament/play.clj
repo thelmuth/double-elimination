@@ -157,14 +157,20 @@
 
    Args:
      tournament - the full tournament map
-     winner-fn  - function of [seed1 seed2 players] that returns the winning seed
-     opts       - map passed to ready-matches (:bracket-order, :within-round)"
+     winner-fn  - function of [seed1 seed2 players match] that returns the winning seed
+     opts       - map with optional keys:
+                    :bracket-order  - passed to ready-matches
+                    :within-round   - passed to ready-matches
+                    :after-match    - fn of [tournament] called after each match (e.g. for auto-save)"
   [tournament winner-fn opts]
-  (loop [tournament tournament]
-    (if (tournament-complete? tournament)
-      tournament
-      (let [next-match (first (order/ready-matches tournament opts))]
-        (when (nil? next-match)
-          (throw (ex-info "No ready match found but tournament is not complete"
-                          {:tournament tournament})))
-        (recur (play-match tournament (:bracket next-match) (:number next-match) winner-fn))))))
+  (let [after-match (get opts :after-match (fn [_] nil))]
+    (loop [tournament tournament]
+      (if (tournament-complete? tournament)
+        tournament
+        (let [next-match (first (order/ready-matches tournament opts))]
+          (when (nil? next-match)
+            (throw (ex-info "No ready match found but tournament is not complete"
+                            {:tournament tournament})))
+          (let [updated (play-match tournament (:bracket next-match) (:number next-match) winner-fn)]
+            (after-match updated)
+            (recur updated)))))))

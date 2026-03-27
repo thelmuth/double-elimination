@@ -141,6 +141,40 @@
                       data-rows))))
 
 ;; ------------------------
+;; Final result display
+;; ------------------------
+
+(defn format-final-result
+  "Format the tournament results as a two-column table showing winner and runner-up.
+
+   Args:
+     winner-player    - player map for the tournament winner
+     runner-up-player - player map for the runner-up
+     player-keys      - (optional) sequence of keys to display, in order.
+                        Defaults to all keys in CSV column order."
+  ([winner-player runner-up-player]
+   (format-final-result winner-player runner-up-player nil))
+  ([winner-player runner-up-player player-keys]
+   (let [inner-width (- total-width 2)
+         ks          (if (seq player-keys) player-keys (keys winner-player))
+         col-header  (str "│ " (pad-right "" label-width)
+                          " │ " (center "🥇 Winner 🥇" col-width)
+                          " │ " (center "🥈 Runner Up 🥈" col-width) " │")
+         data-rows   (map (fn [k]
+                            (table-row (key->label k)
+                                       (get winner-player k "")
+                                       (get runner-up-player k "")))
+                          ks)]
+     (str/join "\n"
+               (concat [(str "┌" (str/join (repeat inner-width "─")) "┐")
+                        (str "│" (center "🏆 Tournament Complete! 🏆" inner-width) "│")
+                        (hline "├" "┬" "┬" "┤")
+                        col-header
+                        (hline "├" "┼" "┼" "┤")]
+                       data-rows
+                       [(hline "└" "┴" "┴" "┘")])))))
+
+;; ------------------------
 ;; Interactive CLI winner function
 ;; ------------------------
 

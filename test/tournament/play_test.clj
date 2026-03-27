@@ -2,8 +2,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [tournament.play :as play]
             [tournament.winner-fns :as wfn]
-            [tournament.double-elim :as de]
-            [tournament.players :as players]))
+            [tournament.double-elim :as de]))
 
 ;; Use a 4-player bracket for most tests -- small enough to reason about by hand.
 ;;

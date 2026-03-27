@@ -20,13 +20,11 @@ To Do
 - [x] **Play through full tournament** — top-level loop that repeatedly picks the next
   match per the chosen play order and plays it until the GF is complete
 - [x] **a main function for calling from command line** - adding functionality so I can call from command line using `clj`
+- [x] Better formatting for CLI information about the players. Formatted in columns, with player A on left and player B on right. Could even format as a table with consistent width of columns (wrapping to next line if necessary) and row labels based on the keys of the player map.
+- [x] **Save/load** — serialize tournament map to EDN file; auto-save after each match;
+  load from file to resume
 
 ## Next up
-
-- [x] Better formatting for CLI information about the players. Formatted in columns, with player A on left and player B on right. Could even format as a table with consistent width of columns (wrapping to next line if necessary) and row labels based on the keys of the player map.
-
-- [ ] **Save/load** — serialize tournament map to EDN file; auto-save after each match;
-  load from file to resume
 
 - [ ] **Edit a result** - make it so that the user can edit a previously decided match.
   I only expect to use this in cases where I made a recent mistake, and not when the
