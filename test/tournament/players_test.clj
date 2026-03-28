@@ -57,7 +57,7 @@
 
   (testing "count is correct"
     (let [players (p/load-players very-very-short-csv)]
-      (is (= 6 (count players))))))
+      (is (= 5 (count players))))))
 
 (deftest default-player->str-test
   (testing "joins all values with ' - '"

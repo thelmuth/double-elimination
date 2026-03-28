@@ -289,7 +289,7 @@
                  {:bracket :WB,
                   :round 1,
                   :number 3,
-                  :players [3 6],
+                  :players [3 :BYE],
                   :winner nil,
                   :loser nil,
                   :prev-left nil,
@@ -361,14 +361,7 @@
                        :name "Luigi's Mansion Theme (From \"Luigi's Mansion\")",
                        :plays "26",
                        :seed "393",
-                       :seed-group "5"}
-                      {:album "test",
-                       :artist "test",
-                       :genre "metal",
-                       :name "test",
-                       :plays "123",
-                       :seed "5",
-                       :seed-group "1"}]}
+                       :seed-group "5"}]}
            (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
                             :WB
                             1
@@ -480,7 +473,7 @@
                   :next-loser {:bracket :LB, :number 1},
                   :next-winner {:bracket :WB, :number 5},
                   :number 3,
-                  :players [3 6],
+                  :players [3 :BYE],
                   :prev-left nil,
                   :prev-right nil,
                   :round 1,
@@ -550,8 +543,7 @@
                        :name "Luigi's Mansion Theme (From \"Luigi's Mansion\")",
                        :plays "26",
                        :seed "393",
-                       :seed-group "5"}
-                      {:album "test", :artist "test", :genre "metal", :name "test", :plays "123", :seed "5", :seed-group "1"}]}
+                       :seed-group "5"}]}
            (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
                             :WB
                             0
