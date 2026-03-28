@@ -198,24 +198,51 @@
          " H " (fmt mid-x) " V " (fmt y2) " H " (fmt x2) "\"/>\n")))
 
 (defn- render-all-connectors
-  "Return SVG path strings for every match-to-next-winner connector.
-   Cross-section dropout lines (WB → LB) are omitted for clarity."
+  "Return SVG path strings for every same-section match-to-next-winner connector.
+   Cross-section dropout lines (WB → LB) and GF connectors are handled separately."
   [tournament layout]
   (str/join
     (keep (fn [m]
             (let [nw (:next-winner m)]
               (when nw
-                (let [from-key  [(:bracket m)  (:number m)]
-                      to-key    [(:bracket nw) (:number nw)]
-                      from-pos  (get layout from-key)
-                      to-pos    (get layout to-key)]
-                  ;; Only draw same-section or section→GF connectors
+                (let [from-key [(:bracket m) (:number m)]
+                      to-key   [(:bracket nw) (:number nw)]
+                      from-pos (get layout from-key)
+                      to-pos   (get layout to-key)]
+                  ;; Only draw within-section connectors here
                   (when (and from-pos to-pos
-                             (or (= (:bracket m) (:bracket nw))
-                                 (= :GF (:bracket nw))))
+                             (= (:bracket m) (:bracket nw)))
                     (render-connector (:x from-pos) (:y-center from-pos)
                                       (:x to-pos)   (:y-center to-pos)))))))
           (concat (:WB tournament) (:LB tournament) (:GF tournament)))))
+
+(defn- render-gf-connectors
+  "Render the WB→GF and LB→GF connectors as a clean branching path.
+   Both arms travel straight right to a shared merge-x midway between the
+   furthest bracket column's right edge and the GF left edge, then a vertical
+   segment connects them, and a short horizontal enters the GF box."
+  [tournament layout]
+  (let [gf-pos    (get layout [:GF 0])
+        gf-x      (:x gf-pos)
+        gf-y      (:y-center gf-pos)
+        wb-feeder (first (filter #(= :GF (:bracket (:next-winner %))) (:WB tournament)))
+        lb-feeder (first (filter #(= :GF (:bracket (:next-winner %))) (:LB tournament)))
+        wb-pos    (when wb-feeder (get layout [:WB (:number wb-feeder)]))
+        lb-pos    (when lb-feeder (get layout [:LB (:number lb-feeder)]))]
+    (when (and wb-pos lb-pos)
+      (let [wb-x1r   (+ (:x wb-pos) box-w)
+            lb-x1r   (+ (:x lb-pos) box-w)
+            merge-x  (/ (+ (max wb-x1r lb-x1r) gf-x) 2.0)
+            wb-y     (:y-center wb-pos)
+            lb-y     (:y-center lb-pos)]
+        ;; WB arm right to merge-x, vertical down to lb-y (full vertical span),
+        ;; LB arm right to merge-x, then horizontal entry from merge-x into GF.
+        (str "<path class=\"wire\" d=\""
+             "M " (fmt wb-x1r) "," (fmt wb-y) " H " (fmt merge-x)
+             " V " (fmt lb-y)
+             " M " (fmt lb-x1r) "," (fmt lb-y) " H " (fmt merge-x)
+             " M " (fmt merge-x) "," (fmt gf-y) " H " (fmt gf-x)
+             "\"/>\n")))))
 
 (defn- render-match-box
   "Return an SVG <g> string for one match box.
@@ -243,8 +270,7 @@
          "  <rect class=\"box\" width=\"" box-w "\" height=\"" box-h "\"/>\n"
          "  <line class=\"div\" x1=\"0\" y1=\"20\" x2=\"" box-w "\" y2=\"20\"/>\n"
          "  <line class=\"div\" x1=\"0\" y1=\"46\" x2=\"" box-w "\" y2=\"46\"/>\n"
-         "  <text x=\"" (/ box-w 2) "\" y=\"10\" text-anchor=\"middle\""
-         " dominant-baseline=\"middle\" class=\"hdr-txt\">"
+         "  <text x=\"8\" y=\"10\" dominant-baseline=\"middle\" class=\"hdr-txt\">"
          (escape-xml hdr-label) "</text>\n"
          "  <text x=\"8\" y=\"33\" dominant-baseline=\"middle\""
          " class=\"" (if left-kw? "p-gray" "p-txt") "\">"
@@ -258,6 +284,21 @@
          (when (and (not right-kw?) (= right winner))
            (str "  <text x=\"172\" y=\"59\" text-anchor=\"end\""
                 " dominant-baseline=\"middle\" class=\"win-chk\">✓</text>\n"))
+         (when (= :WB (:bracket match))
+           (let [next-loser (:next-loser match)
+                 lb-label   (when next-loser
+                              (str "→ LB M" (inc (:number next-loser))))]
+             (when lb-label
+               (if (nil? winner)
+                 ;; Pending: show in header bar, right-aligned
+                 (str "  <text x=\"172\" y=\"10\" text-anchor=\"end\""
+                      " dominant-baseline=\"middle\" class=\"lb-drop-hdr\">"
+                      (escape-xml lb-label) "</text>\n")
+                 ;; Played: show on the loser's row
+                 (let [loser-y (if (= winner left) "59" "33")]
+                   (str "  <text x=\"172\" y=\"" loser-y "\" text-anchor=\"end\""
+                        " dominant-baseline=\"middle\" class=\"lb-drop\">"
+                        (escape-xml lb-label) "</text>\n"))))))
          "</g>\n")))
 
 (defn- render-section-labels
@@ -292,7 +333,9 @@
        "  .wire    { fill: none; stroke: #94a3b8; stroke-width: 1.5; }\n"
        "  .box     { fill: none; stroke: #cbd5e1; stroke-width: 1.5; }\n"
        "  .div     { fill: none; stroke: #e2e8f0; stroke-width: 1; }\n"
-       "  .lbl     { fill: #64748b; font-size: 11px; font-weight: bold; letter-spacing: 0.8px; }\n"
+       "  .lbl         { fill: #64748b; font-size: 11px; font-weight: bold; letter-spacing: 0.8px; }\n"
+       "  .lb-drop     { fill: #94a3b8; font-size: 9px; font-style: italic; }\n"
+       "  .lb-drop-hdr { fill: #ffffff99; font-size: 9px; font-style: italic; }\n"
        "</style>\n"))
 
 ;; ─────────────────────────────────────────────────────────────────────
@@ -331,6 +374,7 @@
           (svg-styles)
           ;; Connectors behind boxes
           (render-all-connectors tournament layout)
+          (render-gf-connectors tournament layout)
           ;; Section labels
           (render-section-labels tournament layout)
           ;; Match boxes

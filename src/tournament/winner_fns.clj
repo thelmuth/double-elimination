@@ -1,7 +1,6 @@
 (ns tournament.winner-fns
   (:require [clojure.string :as str]
-            [tournament.play :as play]
-            [tournament.svg  :as svg]))
+            [tournament.play :as play]))
 
 ;; ------------------------
 ;; Deterministic winner functions
@@ -187,7 +186,6 @@
   (println "│ │  a                    Player A wins          │                                                           │")
   (println "│ │  b                    Player B wins          │                                                           │")
   (println "│ │  undo <WB|LB|GF> <n>  Edit a past result     │                                                           │")
-  (println "│ │  svg                  Save bracket diagram   │                                                           │")
   (println "│ └──────────────────────────────────────────────┘                                                           │"))
 
 (defn- show-prompt []
@@ -241,10 +239,9 @@
    Args:
      player-keys - (optional) sequence of player map keys to display,
                    in order. Defaults to all keys in CSV column order.
-     svg-path    - (optional) file path for the 'svg' command output."
-  ([] (cli-winner-fn nil nil))
-  ([player-keys] (cli-winner-fn player-keys nil))
-  ([player-keys svg-path]
+"
+  ([] (cli-winner-fn nil))
+  ([player-keys]
    (fn [left-seed right-seed players match tournament]
      (print-match left-seed right-seed players match player-keys)
      (show-prompt)
@@ -264,12 +261,5 @@
                  (nil? result)
                  (do (show-prompt) (recur))
                  :else result))
-             "svg"
-             (do (if svg-path
-                   (do (svg/save-svg tournament svg-path)
-                       (println (str "  Saved bracket diagram to " svg-path)))
-                   (println "  No SVG path configured."))
-                 (show-prompt)
-                 (recur))
              (do (println "  Unknown command.")
                  (show-prompt) (recur)))))))))
