@@ -55,18 +55,32 @@
 
 (defn- player-text
   "Returns [display-str keyword?] for a player slot.
-   seed-or-kw is an integer seed, :TBD, or :BYE.
-   display-key is the player map field to show alongside the seed."
-  [seed-or-kw players display-key]
-  (cond
-    (= seed-or-kw :TBD) ["TBD" true]
-    (= seed-or-kw :BYE) ["BYE" true]
-    :else
-    (let [player (nth players seed-or-kw nil)
-          dkey   (or display-key (when player (default-display-key player)))
-          val    (when (and player dkey) (str (get player dkey "")))
-          text   (truncate (str "#" seed-or-kw "  " val) max-text-chars)]
-      [text false])))
+   seed-or-kw     - integer seed, :TBD, or :BYE
+   players        - the tournament's 1-indexed player vector
+   display-key    - player map field to show alongside the seed
+   current-bracket - bracket of the match being rendered (used to determine
+                     whether a TBD slot is filled by a winner or loser)
+   prev-match     - (optional) source match for a :TBD slot; when provided,
+                     'TBD' is replaced with descriptive routing text"
+  ([seed-or-kw players display-key]
+   (player-text seed-or-kw players display-key nil nil))
+  ([seed-or-kw players display-key current-bracket prev-match]
+   (cond
+     (= seed-or-kw :TBD)
+     [(if prev-match
+        (let [verb (if (and (= :LB current-bracket) (= :WB (:bracket prev-match)))
+                     "Loser"
+                     "Winner")]
+          (str verb " of " (name (:bracket prev-match)) " M" (inc (:number prev-match))))
+        "TBD")
+      true]
+     (= seed-or-kw :BYE) ["BYE" true]
+     :else
+     (let [player (nth players seed-or-kw nil)
+           dkey   (or display-key (when player (default-display-key player)))
+           val    (when (and player dkey) (str (get player dkey "")))
+           text   (truncate (str "#" seed-or-kw "  " val) max-text-chars)]
+       [text false]))))
 
 (defn- row-fill-class
   "CSS class for a player row rectangle based on match result."
@@ -257,8 +271,8 @@
                        (str (name (:bracket match))
                             " · R" (:round match)
                             " · M" (inc (:number match))))
-        [left-txt  left-kw?]  (player-text left  players display-key)
-        [right-txt right-kw?] (player-text right players display-key)
+        [left-txt  left-kw?]  (player-text left  players display-key (:bracket match) (:prev-left match))
+        [right-txt right-kw?] (player-text right players display-key (:bracket match) (:prev-right match))
         left-class   (row-fill-class left  winner)
         right-class  (row-fill-class right winner)
         xi           (fmt x)
