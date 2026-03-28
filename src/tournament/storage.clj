@@ -1,5 +1,6 @@
 (ns tournament.storage
   (:require [clojure.edn :as edn]
+            [clojure.pprint :as pprint]
             [clojure.string :as str]))
 
 (defn save-path
@@ -15,7 +16,7 @@
 (defn save-tournament
   "Serialize tournament to an EDN file at path."
   [tournament path]
-  (spit path (pr-str tournament)))
+  (spit path (with-out-str (pprint/pprint tournament))))
 
 (defn load-tournament
   "Deserialize a tournament from an EDN file at path."
