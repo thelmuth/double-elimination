@@ -333,20 +333,3 @@
     (assoc wb-and-lb
            :GF grand-finals)))
 
-
-;; ------------------------
-;; TMH: Not sure if I still need any of this:
-;; ------------------------
-
-(defn wb-by-round-ordered
-  "Return a map of round -> vector of WB matches in the same order they appear in `wb`."
-  [wb]
-  (let [max-round (apply max (map :round wb))]
-    (into {}
-          (for [r (range 1 (inc max-round))]
-            [r (vec (filter #(= (:round %) r) wb))]))))
-
-(defn wb-by-round
-  "Group WB matches by round number: {1 [...], 2 [...], ...}."
-  [wb]
-  (group-by :round wb))

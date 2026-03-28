@@ -8,7 +8,7 @@
   (let [completed      (play/play-tournament tournament
                                              (wfn/cli-winner-fn)
                                              {:after-match #(storage/save-tournament % save-path)})
-        gf-match       (first (:GF completed))
+        gf-match       (play/get-match completed :GF 0)
         winner         (nth (:players completed) (:winner gf-match))
         runner-up      (nth (:players completed) (:loser gf-match))]
     (println)

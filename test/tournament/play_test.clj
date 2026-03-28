@@ -620,7 +620,14 @@
   (testing ":wb-first and :interleaved produce same final state with deterministic winner-fn"
     (let [wb-first    (play/play-tournament four-player-tournament wfn/higher-seed-wins {:bracket-order :wb-first})
           interleaved (play/play-tournament four-player-tournament wfn/higher-seed-wins {:bracket-order :interleaved})]
-      (is (= wb-first interleaved)))))
+      (is (= wb-first interleaved))))
+
+  (testing "seed 1 wins a 5-player tournament (which has :BYE matches)"
+    (let [tournament (assoc (de/make-double-elimination 5)
+                            :players [nil "P1" "P2" "P3" "P4" "P5"])
+          completed  (play/play-tournament tournament wfn/higher-seed-wins {})]
+      (is (play/tournament-complete? completed))
+      (is (= 1 (:winner (play/get-match completed :GF 0)))))))
 
 (comment
 

@@ -5,7 +5,9 @@
 ;; ------------------------
 
 (defn ready-to-play?
-  "Returns true if both players are known (not :TBD) and the match hasn't been played yet."
+  "Returns true if both players are known (not :TBD) and the match hasn't been played yet.
+   Note: :BYE counts as a known player — play-match auto-resolves BYE matches without
+   calling the winner-fn."
   [match]
   (and (nil? (:winner match))
        (not= :TBD (first (:players match)))

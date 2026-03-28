@@ -23,14 +23,11 @@ To Do
 - [x] Better formatting for CLI information about the players. Formatted in columns, with player A on left and player B on right. Could even format as a table with consistent width of columns (wrapping to next line if necessary) and row labels based on the keys of the player map.
 - [x] **Save/load** — serialize tournament map to EDN file; auto-save after each match;
   load from file to resume
-
-## Next up
-
 - [x] **Edit a result** - make it so that the user can edit a previously decided match.
   I only expect to use this in cases where I made a recent mistake, and not when the
   players in the match will have already played future matches.
 
-## Later
+## Next up
 
 - [ ] **ASCII art bracket display** — print a readable text representation of the
   bracket showing match results as they are filled in
