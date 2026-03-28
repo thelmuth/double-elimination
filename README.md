@@ -64,9 +64,26 @@ auto-saving after each match as before.
 │ Title          │ Hey Jude                                            │ Paint It Black                    │
 │ Year           │ 1968                                                │ 1966                              │
 ├────────────────┴─────────────────────────────────────────────────────┴───────────────────────────────────┤
-  Winner (A or B):
+│ ┌─ Commands ───────────────────────────────────┐                                                         │
+│ │  a                    Player A wins          │                                                         │
+│ │  b                    Player B wins          │                                                         │
+│ │  undo <WB|LB|GF> <n>  Edit a past result     │                                                         │
+│ │  svg                  Save bracket diagram   │                                                         │
+│ └──────────────────────────────────────────────┘                                                         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+  >
 ```
+
+### SVG bracket diagram
+
+At any match prompt, type `svg` to save an SVG bracket diagram alongside your save
+file (same path with `.svg` extension). The diagram shows:
+
+- **Winner's Bracket** on top, **Loser's Bracket** below, both progressing left to right
+- **Grand Finals** connecting both brackets on the right
+- Each match box shows seed + one player CSV field (defaults to the first column)
+- Color-coded rows: green = winner, red = loser, gray = TBD/BYE
+- Scales to tournaments of any size
 
 ## Running Tests
 

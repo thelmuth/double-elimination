@@ -26,10 +26,9 @@ To Do
 - [x] **Edit a result** - make it so that the user can edit a previously decided match.
   I only expect to use this in cases where I made a recent mistake, and not when the
   players in the match will have already played future matches.
+- [x] **SVG bracket display** — generate an SVG file showing WB on top, LB below,
+  both left-to-right, GF connecting both; includes seed + one player CSV key per
+  match box; scales to large brackets (800–1000+ players)
+
 
 ## Next up
-
-- [ ] **ASCII art bracket display** — print a readable text representation of the
-  bracket showing match results as they are filled in
-
-- [ ] **SVG bracket display** — generate an SVG file for better visualization

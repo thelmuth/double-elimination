@@ -7,6 +7,11 @@
   [csv-path]
   (str/replace csv-path #"\.csv$" ".edn"))
 
+(defn svg-path
+  "Derive the SVG output path from an EDN save path by replacing the .edn extension."
+  [edn-path]
+  (str/replace edn-path #"\.edn$" ".svg"))
+
 (defn save-tournament
   "Serialize tournament to an EDN file at path."
   [tournament path]
