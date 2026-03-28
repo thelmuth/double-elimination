@@ -2,7 +2,7 @@
 
 Run a double elimination tournament from a CSV file of seeded players, with
 interactive match-by-match input via the command line. Progress is auto-saved
-after each match so you can resume at any time.
+after each match so you can resume at any time. Produces SVGs of the tournament bracket.
 
 ![Example bracket diagram](example_tourney.svg)
 
