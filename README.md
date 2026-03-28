@@ -4,6 +4,8 @@ Run a double elimination tournament from a CSV file of seeded players, with
 interactive match-by-match input via the command line. Progress is auto-saved
 after each match so you can resume at any time.
 
+![Example bracket diagram](example_tourney.svg)
+
 ## Requirements
 
 - [Clojure CLI](https://clojure.org/guides/install_clojure)
@@ -68,7 +70,6 @@ auto-saving after each match as before.
 │ │  a                    Player A wins          │                                                         │
 │ │  b                    Player B wins          │                                                         │
 │ │  undo <WB|LB|GF> <n>  Edit a past result     │                                                         │
-│ │  svg                  Save bracket diagram   │                                                         │
 │ └──────────────────────────────────────────────┘                                                         │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────┘
   >
@@ -76,13 +77,13 @@ auto-saving after each match as before.
 
 ### SVG bracket diagram
 
-At any match prompt, type `svg` to save an SVG bracket diagram alongside your save
-file (same path with `.svg` extension). The diagram shows:
+An SVG bracket diagram is saved automatically after every match alongside your
+save file (same path with `.svg` extension). The diagram shows:
 
 - **Winner's Bracket** on top, **Loser's Bracket** below, both progressing left to right
 - **Grand Finals** connecting both brackets on the right
 - Each match box shows seed + one player CSV field (defaults to the first column)
-- Color-coded rows: green = winner, red = loser, gray = TBD/BYE
+- Color-coded rows: green = winner, red = loser, gray = TBD/routing info
 - Scales to tournaments of any size
 
 ## Running Tests
