@@ -1,5 +1,6 @@
 (ns tournament.winner-fns
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [tournament.play :as play]))
 
 ;; ------------------------
 ;; Deterministic winner functions
@@ -12,8 +13,9 @@
      left-seed  - integer seed of the left player
      right-seed - integer seed of the right player
      players    - the tournament's 1-indexed player vector (unused)
-     match      - the full match map (unused)"
-  [left-seed right-seed _players _match]
+     match      - the full match map (unused)
+     tournament - the full tournament map (unused)"
+  [left-seed right-seed _players _match _tournament]
   (min left-seed right-seed))
 
 ;; ------------------------
@@ -86,7 +88,6 @@
        mid-2
        (str/join (repeat (+ col-width 2) "─"))
        right))
-
 
 (defn- table-row
   "Format one data row, wrapping long values across multiple lines."
@@ -178,30 +179,86 @@
 ;; Interactive CLI winner function
 ;; ------------------------
 
+(def ^:private bracket-by-name {"wb" :WB "lb" :LB "gf" :GF})
+
+(defn- print-commands []
+  (println "│ ┌─ Commands ───────────────────────────────────┐                                                           │")
+  (println "│ │  a                    Player A wins          │                                                           │")
+  (println "│ │  b                    Player B wins          │                                                           │")
+  (println "│ │  undo <WB|LB|GF> <n>  Edit a past result     │                                                           │")
+  (println "│ └──────────────────────────────────────────────┘                                                           │"))
+
+(defn- show-prompt []
+  (print "  > ") (flush))
+
+(defn- handle-undo
+  "Process an undo command. Returns {:command :undo ...} if the user confirms,
+   :cancelled if the user said no, or nil if the undo was rejected with an error."
+  [tokens tournament players player-keys bottom]
+  (let [bracket (bracket-by-name (second tokens))
+        number  (try (Integer/parseInt (nth tokens 2)) (catch Exception _ nil))]
+    (if (or (not= 3 (count tokens)) (nil? bracket) (nil? number))
+      (do (println "  Usage: undo <WB|LB|GF> <number>") nil)
+      (let [target (play/get-match tournament bracket number)]
+        (cond
+          (nil? target)
+          (do (println (str "  No match found: " (name bracket) " " number)) nil)
+
+          (nil? (:winner target))
+          (do (println (str "  " (name bracket) " " number " has not been played yet.")) nil)
+
+          :else
+          (let [outcome (play/undo-result tournament bracket number)]
+            (if (:error outcome)
+              (do (println (str "  " (:error outcome))) nil)
+              (let [[target-left target-right] (:players target)
+                    winner-label (if (= (:winner target) target-left) "A" "B")]
+                (println bottom)
+                (println)
+                (println (format-match-header target))
+                (println (format-player-table target-left target-right players player-keys))
+                (println (hline "└" "┴" "┴" "┘"))
+                (println (str "  Recorded result: " winner-label " won"))
+                (print "  Undo this match? (y/n): ") (flush)
+                (if (= "y" (str/lower-case (str/trim (read-line))))
+                  {:command :undo :bracket bracket :number number}
+                  (do (println "  Undo cancelled.") :cancelled))))))))))
+
+(defn- print-match [left-seed right-seed players match player-keys]
+  (println)
+  (println (format-match-header match))
+  (println (format-player-table left-seed right-seed players player-keys))
+  (println (hline "├" "┴" "┴" "┤"))
+  (print-commands))
+
 (defn cli-winner-fn
-  "Returns a winner-picking function compatible with play-match.
+  "Returns a winner-picking function compatible with play-tournament.
    Displays a formatted table of match and player info, then prompts
-   the user to pick the winner.
+   the user to pick the winner or enter a command.
 
    Args:
      player-keys - (optional) sequence of player map keys to display,
                    in order. Defaults to all keys in CSV column order."
   ([] (cli-winner-fn nil))
   ([player-keys]
-   (fn [left-seed right-seed players match]
-     (println)
-     (println (format-match-header match))
-     (println (format-player-table left-seed right-seed players player-keys))
-     (println (hline "├" "┴" "┴" "┤"))
+   (fn [left-seed right-seed players match tournament]
+     (print-match left-seed right-seed players match player-keys)
+     (show-prompt)
      (let [bottom (str "└" (str/join (repeat (- total-width 2) "─")) "┘")]
-       (print "  Winner (A or B): ")
-       (flush)
        (loop []
-         (let [input (str/lower-case (str/trim (read-line)))]
-           (case input
-             "a" (do (println bottom) left-seed)
-             "b" (do (println bottom) right-seed)
-             (do (println "  Please enter A or B.")
-                 (print "  Winner (A or B): ")
-                 (flush)
-                 (recur)))))))))
+         (let [tokens (str/split (str/lower-case (str/trim (read-line))) #"\s+")]
+           (case (first tokens)
+             "a"    (do (println bottom) left-seed)
+             "b"    (do (println bottom) right-seed)
+             "undo"
+             (let [result (handle-undo tokens tournament players player-keys bottom)]
+               (cond
+                 (= result :cancelled)
+                 (do (print-match left-seed right-seed players match player-keys)
+                     (show-prompt)
+                     (recur))
+                 (nil? result)
+                 (do (show-prompt) (recur))
+                 :else result))
+             (do (println "  Unknown command.")
+                 (show-prompt) (recur)))))))))

@@ -26,7 +26,7 @@ To Do
 
 ## Next up
 
-- [ ] **Edit a result** - make it so that the user can edit a previously decided match.
+- [x] **Edit a result** - make it so that the user can edit a previously decided match.
   I only expect to use this in cases where I made a recent mistake, and not when the
   players in the match will have already played future matches.
 

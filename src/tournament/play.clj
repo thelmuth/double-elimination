@@ -118,6 +118,70 @@
         (advance-player (:next-loser match)  loser-seed  bracket number :loser)))))
 
 ;; ------------------------
+;; Undoing match results
+;; ------------------------
+
+(defn- retract-player
+  "Reset a player's destination slot back to :TBD, undoing an advance.
+   Returns tournament unchanged if next-ref is nil.
+
+   Args:
+     tournament   - the full tournament map
+     next-ref     - map {:bracket :WB/:LB/:GF :number N} pointing to the destination match,
+                    or nil
+     from-bracket - bracket keyword of the match being undone
+     from-number  - match number of the match being undone
+     result-type  - :winner or :loser"
+  [tournament next-ref from-bracket from-number result-type]
+  (if (nil? next-ref)
+    tournament
+    (let [next-match  (get-match tournament (:bracket next-ref) (:number next-ref))
+          from-ref    {:bracket from-bracket :number from-number :result result-type}
+          player-slot (cond
+                        (= from-ref (:prev-left next-match))  0
+                        (= from-ref (:prev-right next-match)) 1
+                        :else (throw (ex-info "Could not determine slot for retracting player"
+                                              {:next-ref next-ref :from-ref from-ref})))]
+      (set-match-player tournament (:bracket next-ref) (:number next-ref) player-slot :TBD))))
+
+(defn undo-result
+  "Undo the result of a completed match, clearing its winner/loser and resetting
+   both players' destination slots to :TBD. Returns {:ok updated-tournament} on
+   success, or {:error message} if the match hasn't been played or a downstream
+   match has already been played.
+
+   Args:
+     tournament - the full tournament map
+     bracket    - keyword :WB, :LB, or :GF
+     number     - integer match number within that bracket"
+  [tournament bracket number]
+  (let [match       (get-match tournament bracket number)
+        next-winner (:next-winner match)
+        next-loser  (:next-loser match)]
+    (cond
+      (nil? (:winner match))
+      {:error (format "%s %d has not been played yet." (name bracket) number)}
+
+      (and next-winner
+           (some? (:winner (get-match tournament (:bracket next-winner) (:number next-winner)))))
+      {:error (format "Cannot undo: %s %d has already been played (uses the winner of %s %d)."
+                      (name (:bracket next-winner)) (:number next-winner)
+                      (name bracket) number)}
+
+      (and next-loser
+           (some? (:winner (get-match tournament (:bracket next-loser) (:number next-loser)))))
+      {:error (format "Cannot undo: %s %d has already been played (uses the loser of %s %d)."
+                      (name (:bracket next-loser)) (:number next-loser)
+                      (name bracket) number)}
+
+      :else
+      {:ok (-> tournament
+               (assoc-in [bracket number :winner] nil)
+               (assoc-in [bracket number :loser] nil)
+               (retract-player next-winner bracket number :winner)
+               (retract-player next-loser  bracket number :loser))})))
+
+;; ------------------------
 ;; Playing matches
 ;; ------------------------
 
@@ -129,17 +193,15 @@
      tournament - the full tournament map
      bracket    - keyword :WB, :LB, or :GF
      number     - integer match number within that bracket
-     winner-fn  - function of [seed1 seed2 players match] that returns the winning seed;
-                  seed1/seed2 are integer seeds, players is the tournament's
-                  1-indexed player vector, match is the full match map;
-                  not called when either player is :BYE"
+     winner-fn  - function of [left-seed right-seed players match tournament] that
+                  returns the winning seed; not called when either player is :BYE"
   [tournament bracket number winner-fn]
   (let [match       (get-match tournament bracket number)
         [left-seed right-seed] (:players match)
         winner-seed (cond
                       (= left-seed :BYE)  right-seed
                       (= right-seed :BYE) left-seed
-                      :else (winner-fn left-seed right-seed (:players tournament) match))]
+                      :else (winner-fn left-seed right-seed (:players tournament) match tournament))]
     (record-result tournament bracket number winner-seed)))
 
 ;; ------------------------
@@ -157,20 +219,36 @@
 
    Args:
      tournament - the full tournament map
-     winner-fn  - function of [seed1 seed2 players match] that returns the winning seed
+     winner-fn  - function of [left-seed right-seed players match tournament] that
+                  returns either the winning seed (integer) or an undo command map
+                  {:command :undo :bracket bracket :number number}
      opts       - map with optional keys:
                     :bracket-order  - passed to ready-matches
                     :within-round   - passed to ready-matches
-                    :after-match    - fn of [tournament] called after each match (e.g. for auto-save)"
+                    :after-match    - fn of [tournament] called after each match or undo"
   [tournament winner-fn opts]
   (let [after-match (get opts :after-match (fn [_] nil))]
     (loop [tournament tournament]
       (if (tournament-complete? tournament)
         tournament
-        (let [next-match (first (order/ready-matches tournament opts))]
-          (when (nil? next-match)
+        (let [next-match-ref (first (order/ready-matches tournament opts))]
+          (when (nil? next-match-ref)
             (throw (ex-info "No ready match found but tournament is not complete"
                             {:tournament tournament})))
-          (let [updated (play-match tournament (:bracket next-match) (:number next-match) winner-fn)]
-            (after-match updated)
-            (recur updated)))))))
+          (let [{:keys [bracket number]} next-match-ref
+                match       (get-match tournament bracket number)
+                [left right] (:players match)
+                result      (cond
+                              (= left :BYE)  right
+                              (= right :BYE) left
+                              :else (winner-fn left right (:players tournament) match tournament))]
+            (if (and (map? result) (= (:command result) :undo))
+              (let [outcome (undo-result tournament (:bracket result) (:number result))]
+                (when (:error outcome)
+                  (throw (ex-info "Undo failed unexpectedly after validation" outcome)))
+                (let [updated (:ok outcome)]
+                  (after-match updated)
+                  (recur updated)))
+              (let [updated (record-result tournament bracket number result)]
+                (after-match updated)
+                (recur updated)))))))))

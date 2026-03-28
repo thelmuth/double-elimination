@@ -172,14 +172,14 @@
 
 (deftest play-match-test
   (testing "always-first winner-fn picks seed in slot 0"
-    (let [always-first (fn [s1 _s2 _players _match] s1)
+    (let [always-first (fn [s1 _s2 _players _match _tournament] s1)
           t  four-player-tournament
           t' (play/play-match t :WB 0 always-first)]
       (is (= 1 (:winner (play/get-match t' :WB 0))))
       (is (= 4 (:loser  (play/get-match t' :WB 0))))))
 
   (testing "always-second winner-fn picks seed in slot 1"
-    (let [always-second (fn [_s1 s2 _players _match] s2)
+    (let [always-second (fn [_s1 s2 _players _match _tournament] s2)
           t  four-player-tournament
           t' (play/play-match t :WB 0 always-second)]
       (is (= 4 (:winner (play/get-match t' :WB 0))))
@@ -571,6 +571,45 @@
                         (play/record-result :LB 1 4)
                         (play/record-result :GF 0 1))]
       (is (true? (play/tournament-complete? completed))))))
+
+(deftest undo-result-test
+  (testing "undoing a match restores the tournament to its pre-match state"
+    (let [t  (play/record-result four-player-tournament :WB 0 1)
+          t' (:ok (play/undo-result t :WB 0))]
+      (is (= four-player-tournament t'))))
+
+  (testing "undoing both WB round-1 matches restores full initial state"
+    (let [t  (-> four-player-tournament
+                 (play/record-result :WB 0 1)
+                 (play/record-result :WB 1 2))
+          t' (-> {:ok t}
+                 (as-> r (play/undo-result (:ok r) :WB 1))
+                 (as-> r (play/undo-result (:ok r) :WB 0))
+                 :ok)]
+      (is (= four-player-tournament t'))))
+
+  (testing "returns error when match has not been played"
+    (let [result (play/undo-result four-player-tournament :WB 0)]
+      (is (contains? result :error))
+      (is (string? (:error result)))))
+
+  (testing "returns error when winner's next match has already been played"
+    (let [t (-> four-player-tournament
+                (play/record-result :WB 0 1)
+                (play/record-result :WB 1 2)
+                (play/record-result :WB 2 1))
+          result (play/undo-result t :WB 0)]
+      (is (contains? result :error))
+      (is (re-find #"WB 2" (:error result)))))
+
+  (testing "returns error when loser's next match has already been played"
+    (let [t (-> four-player-tournament
+                (play/record-result :WB 0 1)
+                (play/record-result :WB 1 2)
+                (play/record-result :LB 0 4))
+          result (play/undo-result t :WB 0)]
+      (is (contains? result :error))
+      (is (re-find #"LB 0" (:error result))))))
 
 (deftest play-tournament-test
   (testing "seed 1 wins everything with higher-seed-wins"
