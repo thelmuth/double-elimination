@@ -37,4 +37,8 @@ To Do
 
 - [ ] **Add to Clojars** - Add this project to Clojars, including specific useful functions in the README, so that others could use it as a dependency. Will require considering what are the core entry points and documenting those well.
 
-- [ ] **Make playlists for iTunes** - I don't even know if this is remotely possible, but: I usually have to manually search for each song that will be in a match. Would it be possible to make an iTunes playlist of the upcoming matches for a given bracket/round, so that I can just make that playlist and listen to it straight through to decide matches?
+## Unsure if these are even remotely possible
+
+- [ ] **Make playlists for iTunes** - I usually have to manually search for each song that will be in a match. Would it be possible to make an iTunes playlist of the upcoming matches for a given bracket/round, so that I can just make that playlist and listen to it straight through to decide matches?
+
+- [ ] **Interactive Website** - Make a website with the same layout as the SVG, except interactive, so that you can click a match and tell which player won.
