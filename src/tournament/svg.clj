@@ -36,7 +36,7 @@
   [s max-len]
   (let [s (str s)]
     (if (> (count s) max-len)
-      (str (subs s 0 (dec max-len)) "…")
+      (str (subs s 0 (dec max-len)) "...")
       s)))
 
 (defn- fmt

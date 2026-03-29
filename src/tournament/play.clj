@@ -252,3 +252,33 @@
               (let [updated (record-result tournament bracket number result)]
                 (after-match updated)
                 (recur updated)))))))))
+
+;; ------------------------
+;; Rankings
+;; ------------------------
+
+(defn compute-rankings
+  "Returns a sequence of {:rank n :seed s} maps for a completed tournament,
+   ordered from rank 1 (winner) outward.  Players eliminated in the same LB
+   round share a rank; the next rank increments past all of them.
+
+   Ranking order:
+     1  — GF winner
+     2  — GF loser
+     3+ — LB losers, latest round first (highest LB round = eliminated last)
+
+   BYE entries are excluded."
+  [tournament]
+  (let [gf-match    (get-match tournament :GF 0)
+        lb-by-round (group-by :round (:LB tournament))
+        lb-rounds   (sort > (keys lb-by-round))]
+    (loop [rounds lb-rounds
+           rank   3
+           result [{:rank 1 :seed (:winner gf-match)}
+                   {:rank 2 :seed (:loser  gf-match)}]]
+      (if (empty? rounds)
+        result
+        (let [losers (filter integer? (map :loser (get lb-by-round (first rounds))))]
+          (recur (rest rounds)
+                 (+ rank (count losers))
+                 (into result (map #(hash-map :rank rank :seed %) losers))))))))

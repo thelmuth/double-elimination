@@ -6,15 +6,17 @@
             [tournament.winner-fns :as wfn]))
 
 (defn- run-tournament [tournament save-path]
-  (let [svg-save-path  (storage/svg-path save-path)
-        completed      (play/play-tournament tournament
-                                             (wfn/cli-winner-fn nil)
-                                             {:after-match (fn [t]
-                                                             (storage/save-tournament t save-path)
-                                                             (svg/save-svg t svg-save-path))})
-        gf-match       (play/get-match completed :GF 0)
-        winner         (nth (:players completed) (:winner gf-match))
-        runner-up      (nth (:players completed) (:loser gf-match))]
+  (let [svg-save-path      (storage/svg-path save-path)
+        rankings-save-path (storage/rankings-path save-path)
+        completed          (play/play-tournament tournament
+                                                 (wfn/cli-winner-fn nil)
+                                                 {:after-match (fn [t]
+                                                                 (storage/save-tournament t save-path)
+                                                                 (svg/save-svg t svg-save-path))})
+        gf-match           (play/get-match completed :GF 0)
+        winner             (nth (:players completed) (:winner gf-match))
+        runner-up          (nth (:players completed) (:loser gf-match))]
+    (storage/save-rankings completed rankings-save-path)
     (println)
     (println (wfn/format-final-result winner runner-up))
     (println)))

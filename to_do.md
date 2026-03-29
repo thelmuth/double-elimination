@@ -29,16 +29,15 @@ To Do
 - [x] **SVG bracket display** — generate an SVG file showing WB on top, LB below,
   both left-to-right, GF connecting both; includes seed + one player CSV key per
   match box; scales to large brackets (800–1000+ players)
-
+- [x] **Ranking of players after tournament** - Make a list of the order of players (some will be tied) of the "place" they took. Winner of GF is rank 1, loser of GF is rank 2, loser of last game in LB is rank 3, etc. I think it would be best to just create a text file of this at the end of the tournament.
 
 ## Next up
 
-- [ ] **Ranking of players after tournament** - Make a list of the order of players (some will be tied) of the "place" they took. Winner of GF is rank 1, loser of GF is rank 2, loser of last game in LB is rank 3, etc. I think it would be best to just create a text file of this at the end of the tournament.
+- [ ] **Make playlists for iTunes** (if possible) - I usually have to manually search for each song that will be in a match. Would it be possible to make an iTunes playlist of the upcoming matches for a given bracket/round, so that I can just make that playlist and listen to it straight through to decide matches? Note: I'm running the tournament on my MacOS laptop, but my iTunes is on Windows.
+
+
+## Maybe in the far future
 
 - [ ] **Add to Clojars** - Add this project to Clojars, including specific useful functions in the README, so that others could use it as a dependency. Will require considering what are the core entry points and documenting those well.
-
-## Unsure if these are even remotely possible
-
-- [ ] **Make playlists for iTunes** - I usually have to manually search for each song that will be in a match. Would it be possible to make an iTunes playlist of the upcoming matches for a given bracket/round, so that I can just make that playlist and listen to it straight through to decide matches?
 
 - [ ] **Interactive Website** - Make a website with the same layout as the SVG, except interactive, so that you can click a match and tell which player won.

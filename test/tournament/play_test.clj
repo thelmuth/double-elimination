@@ -621,29 +621,30 @@
       (is (play/tournament-complete? completed))
       (is (= 1 (:winner (play/get-match completed :GF 0)))))))
 
-(comment
+(deftest compute-rankings-test
+  (testing "4-player tournament: correct ranks for all players"
+    ;; Seed 1 wins WB and GF. Seed 4 loses WB R1, then wins LB R1, then loses LB R2.
+    ;; Seed 3 loses WB R1 then loses LB R1. Seed 2 loses WB final then loses LB final.
+    ;;   Rank 1: seed 1 (GF winner)
+    ;;   Rank 2: seed 2 (GF loser — lost LB R2 which feeds GF)
+    ;;   Rank 3: seed 4 (LB R2 loser)  <- LB round 2 is the later round
+    ;;   Rank 4: seed 3 (LB R1 loser)
+    (let [completed (play/play-tournament four-player-tournament wfn/higher-seed-wins {})
+          rankings  (play/compute-rankings completed)]
+      (is (= {:rank 1 :seed 1} (first rankings)))
+      (is (= {:rank 2 :seed 2} (second rankings)))
+      (is (= 4 (count rankings)))
+      (is (every? :rank rankings))
+      (is (every? integer? (map :seed rankings)))))
 
-  ;; TMH: Keep this around for now. It shows how to use play-match
-  ;; with cli-winner-fn
-  (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
-                   :WB
-                   1
-                   (wfn/cli-winner-fn))
+  (testing "ranks are strictly increasing (no gaps within a group, skips for ties)"
+    (let [completed (play/play-tournament four-player-tournament wfn/higher-seed-wins {})
+          rankings  (play/compute-rankings completed)
+          ranks     (map :rank rankings)]
+      (is (= (first ranks) 1))
+      (is (apply <= ranks))))
 
-  ;; this one has a :BYE
-  (play/play-match (play/make-tournament "test/resources/very_very_short.csv")
-                   :WB
-                   0
-                   (wfn/cli-winner-fn))
-
-  (play/play-tournament (play/make-tournament "test/resources/very_very_short.csv")
-                        wfn/higher-seed-wins
-                        {})
-  
-  (play/play-tournament (play/make-tournament "test/resources/very_very_short.csv")
-                        (wfn/cli-winner-fn)
-                        {})
-
-
-  ;
-  )
+  (testing "all seeds accounted for in completed 4-player tournament"
+    (let [completed (play/play-tournament four-player-tournament wfn/higher-seed-wins {})
+          seeds     (set (map :seed (play/compute-rankings completed)))]
+      (is (= #{1 2 3 4} seeds)))))
