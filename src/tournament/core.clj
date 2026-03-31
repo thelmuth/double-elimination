@@ -8,11 +8,18 @@
 (defn- run-tournament [tournament save-path]
   (let [svg-save-path      (storage/svg-path save-path)
         rankings-save-path (storage/rankings-path save-path)
+        ;; Agent serializes saves onto a background thread so the match prompt
+        ;; appears immediately rather than blocking on EDN/SVG I/O.
+        save-agent         (agent nil :error-handler (fn [_ ex] (println "\nSave error:" ex)))
         completed          (play/play-tournament tournament
                                                  (wfn/cli-winner-fn nil)
                                                  {:after-match (fn [t]
-                                                                 (storage/save-tournament t save-path)
-                                                                 (svg/save-svg t svg-save-path))})
+                                                                 (svg/save-svg t svg-save-path)
+                                                                 (send save-agent
+                                                                       (fn [_]
+                                                                         (storage/save-tournament t save-path))))})
+        ;; Block until the last background save finishes before writing rankings.
+        _                  (await save-agent)
         gf-match           (play/get-match completed :GF 0)
         winner             (nth (:players completed) (:winner gf-match))
         runner-up          (nth (:players completed) (:loser gf-match))]
