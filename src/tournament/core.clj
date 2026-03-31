@@ -14,7 +14,7 @@
                                                  (wfn/cli-winner-fn nil)
                                                  {:after-match (fn [t]
                                                                  (storage/save-tournament t save-path)
-                                                                 (svg/save-svg t svg-save-path))})
+                                                                 (svg/save-svg t svg-save-path [:name :artist :album]))})
         gf-match           (play/get-match completed :GF 0)
         winner             (nth (:players completed) (:winner gf-match))
         runner-up          (nth (:players completed) (:loser gf-match))]
