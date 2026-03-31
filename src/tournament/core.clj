@@ -1,6 +1,8 @@
 (ns tournament.core
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [tournament.play :as play]
+            [tournament.playlist :as playlist]
             [tournament.storage :as storage]
             [tournament.svg :as svg]
             [tournament.winner-fns :as wfn]))
@@ -47,8 +49,31 @@
       (println (str "Resuming tournament from " edn-path))
       (run-tournament (storage/load-tournament edn-path) edn-path))
 
+    "playlist"
+    (let [[edn-path itunes-path bracket-str round-str] args]
+      (when (some nil? [edn-path itunes-path bracket-str round-str])
+        (println "Usage: clj -M:playlist <save.edn> <itunes-library.xml> <WB|LB|GF> <round>")
+        (System/exit 1))
+      (when-not (.exists (io/file edn-path))
+        (println (str "Error: save file not found: " edn-path))
+        (System/exit 1))
+      (when-not (.exists (io/file itunes-path))
+        (println (str "Error: iTunes library not found: " itunes-path))
+        (System/exit 1))
+      (let [bracket (keyword (str/upper-case bracket-str))
+            round   (try (Integer/parseInt round-str)
+                         (catch NumberFormatException _
+                           (println (str "Error: round must be an integer, got: " round-str))
+                           (System/exit 1)))]
+        (playlist/save-playlist (storage/load-tournament edn-path)
+                                itunes-path
+                                (playlist/playlist-path edn-path bracket round)
+                                bracket
+                                round)))
+
     (do
       (println (str "Unknown command: " mode))
       (println "Usage: clj -M:start <players.csv>")
       (println "       clj -M:load <save.edn>")
+      (println "       clj -M:playlist <save.edn> <itunes-library.xml> <WB|LB|GF> <round>")
       (System/exit 1))))

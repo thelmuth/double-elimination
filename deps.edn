@@ -5,4 +5,5 @@
                          :extra-deps  {io.github.metabase/hawk {:mvn/version "1.0.13"}}
                          :exec-fn     mb.hawk.core/find-and-run-tests-cli}
             :start     {:main-opts ["-m" "tournament.core" "start"]}
-            :load      {:main-opts ["-m" "tournament.core" "load"]}}}
+            :load      {:main-opts ["-m" "tournament.core" "load"]}
+            :playlist  {:main-opts ["-m" "tournament.core" "playlist"]}}}

@@ -33,7 +33,7 @@ To Do
 
 ## Next up
 
-- [ ] **Make playlists for iTunes** (if possible) - I usually have to manually search for each song that will be in a match. Would it be possible to make an iTunes playlist of the upcoming matches for a given bracket/round, so that I can just make that playlist and listen to it straight through to decide matches? Note: I'm running the tournament on my MacOS laptop, but my iTunes is on Windows.
+- [ ] **Make playlists for iTunes** (if possible) - I usually have to manually search for each song that will be in a match. Would it be possible to make an iTunes playlist of the upcoming matches for a given bracket/round, so that I can just make that playlist and listen to it straight through to decide matches? Note: I'm running the tournament on my MacOS laptop, but my iTunes is on Windows. I am making the original CSVs for the tournament by exporting a playlist from iTunes, if that helps - the seeds are in iTunes under the "Grouping" field. I do make a few manual changes to the iTunes exported CSV, things like renaming some columns and removing others, before sending to the tournament. I can do some of the work manually, if that helps -- making a new playlist, adding the songs, etc. The most important thing is sorting the songs in the order of the tournament, so that I don't have to do that myself.
 
 
 ## Maybe in the far future
