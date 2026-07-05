@@ -86,6 +86,36 @@ save file (same path with `.svg` extension). The diagram shows:
 - Color-coded rows: green = winner, red = loser, gray = TBD/routing info
 - Scales to tournaments of any size
 
+## Generating iTunes Playlists
+
+For a given bracket and round, you can generate an `.m3u` playlist containing
+the songs for all upcoming matches in that round, ordered match-by-match:
+
+```
+clj -M:playlist path/to/players.edn path/to/iTunes\ Music\ Library.xml <WB|LB|GF> <round>
+```
+
+For example, to generate a playlist for Winner's Bracket Round 3:
+
+```
+clj -M:playlist songs.edn ~/Music/iTunes/iTunes\ Music\ Library.xml WB 3
+```
+
+This creates a file like `songs-WB-R3-playlist.m3u` in the same directory as
+your save file. The playlist lists both songs for match 1, then both for match 2,
+and so on.
+
+**Requirements for matching:**
+
+- Your CSV must have `Name`, `Artist`, and `Album` columns (case-sensitive) with
+  values that match the corresponding fields in iTunes exactly
+- Tracks without a local file (e.g. iCloud-only) are skipped
+- Any seeds that couldn't be matched are reported at the end
+
+The iTunes Music Library XML file is typically located at
+`~/Music/iTunes/iTunes Music Library.xml` on macOS or
+`%USERPROFILE%\Music\iTunes\iTunes Music Library.xml` on Windows.
+
 ## Running Tests
 
 ```
