@@ -243,23 +243,24 @@
   ([] (cli-winner-fn nil))
   ([player-keys]
    (fn [left-seed right-seed players match tournament]
-     (print-match left-seed right-seed players match player-keys)
-     (show-prompt)
-     (let [bottom (str "└" (str/join (repeat (- total-width 2) "─")) "┘")]
-       (loop []
-         (let [tokens (str/split (str/lower-case (str/trim (read-line))) #"\s+")]
-           (case (first tokens)
-             "a"    (do (println bottom) left-seed)
-             "b"    (do (println bottom) right-seed)
-             "undo"
-             (let [result (handle-undo tokens tournament players player-keys bottom)]
-               (cond
-                 (= result :cancelled)
-                 (do (print-match left-seed right-seed players match player-keys)
-                     (show-prompt)
-                     (recur))
-                 (nil? result)
-                 (do (show-prompt) (recur))
-                 :else result))
-             (do (println "  Unknown command.")
-                 (show-prompt) (recur)))))))))
+     (let [[a-seed b-seed] (shuffle [left-seed right-seed])]
+       (print-match a-seed b-seed players match player-keys)
+       (show-prompt)
+       (let [bottom (str "└" (str/join (repeat (- total-width 2) "─")) "┘")]
+         (loop []
+           (let [tokens (str/split (str/lower-case (str/trim (read-line))) #"\s+")]
+             (case (first tokens)
+               "a"    (do (println bottom) a-seed)
+               "b"    (do (println bottom) b-seed)
+               "undo"
+               (let [result (handle-undo tokens tournament players player-keys bottom)]
+                 (cond
+                   (= result :cancelled)
+                   (do (print-match a-seed b-seed players match player-keys)
+                       (show-prompt)
+                       (recur))
+                   (nil? result)
+                   (do (show-prompt) (recur))
+                   :else result))
+               (do (println "  Unknown command.")
+                   (show-prompt) (recur))))))))))
