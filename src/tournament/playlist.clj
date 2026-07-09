@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.xml :as xml])
   (:import [javax.xml.parsers SAXParserFactory]
-           [org.xml.sax EntityResolver InputSource]
+           [org.xml.sax EntityResolver InputSource XMLReader]
            [java.io StringReader]
            [java.net URLDecoder]))
 
@@ -18,24 +18,37 @@
   (let [factory (doto (SAXParserFactory/newInstance)
                   (.setFeature "http://apache.org/xml/features/nonvalidating/load-external-dtd" false)
                   (.setFeature "http://xml.org/sax/features/validation" false))
-        reader  (.. factory newSAXParser getXMLReader)]
+        ^XMLReader reader (.. factory newSAXParser getXMLReader)]
+    ;; XMLReader.parse takes a single InputSource, so the handler and resolver
+    ;; must be installed on the reader beforehand. (SAXParser's two-arg parse
+    ;; would clobber the EntityResolver with the DefaultHandler.)
+    (.setContentHandler reader handler)
     (.setEntityResolver reader
                         (reify EntityResolver
                           (resolveEntity [_ _ _]
                             (InputSource. (StringReader. "")))))
-    (.parse reader source handler)))
+    (with-open [input-stream (io/input-stream source)]
+      (.parse reader (InputSource. input-stream)))))
 
 (defn- element-children
   "Return only element children (maps) of an XML node, discarding whitespace text nodes."
   [node]
   (filter map? (:content node)))
 
+(defn- text-content
+  "Return the full text of an XML node.  SAX splits text around entity
+   references (e.g. &#38;) into multiple :content strings, so they must be
+   rejoined rather than taking only the first."
+  [node]
+  (str/join (filter string? (:content node))))
+
 (defn- dict-pairs
   "Convert a plist <dict> element into a lazy seq of [key-string value-element] pairs."
   [dict-element]
   (->> (element-children dict-element)
        (partition 2)
-       (map (fn [[k v]] [(first (:content k)) v]))))
+       (map (fn [[key-element value-element]]
+              [(text-content key-element) value-element]))))
 
 (defn- extract-track
   "Extract Name, Artist, Album, and Location string values from a plist track
@@ -43,10 +56,10 @@
   [track-dict]
   (let [wanted #{"Name" "Artist" "Album" "Location"}
         fields (into {}
-                     (keep (fn [[k v]]
-                             (when (and (contains? wanted k)
-                                        (= :string (:tag v)))
-                               [k (first (:content v))]))
+                     (keep (fn [[field-name value-element]]
+                             (when (and (contains? wanted field-name)
+                                        (= :string (:tag value-element)))
+                               [field-name (text-content value-element)]))
                            (dict-pairs track-dict)))]
     (when (contains? fields "Location") fields)))
 
@@ -107,11 +120,18 @@
   [location]
   (URLDecoder/decode location "UTF-8"))
 
+(defn- bye-match?
+  "True if either slot of the match is a :BYE, meaning no song is played."
+  [match]
+  (some #(= :BYE %) (:players match)))
+
 (defn- matches-for-round
-  "Return matches in the given bracket and round, sorted by match number."
+  "Return the playable matches in the given bracket and round, sorted by match
+   number.  Matches decided by a bye are excluded, since no song is played."
   [tournament bracket round]
   (->> (get tournament bracket)
        (filter #(= round (:round %)))
+       (remove bye-match?)
        (sort-by :number)))
 
 (defn playlist-path
@@ -127,8 +147,9 @@
    Songs are ordered match-by-match: both songs for match 1, then match 2, etc.
    Within each match the left/A player comes first.
 
-   Returns {:m3u string :unmatched [seed ...]} where :unmatched lists seeds
-   that could not be found in the iTunes track index.
+   Returns {:m3u string :matched n :unmatched [seed ...]} where :unmatched lists
+   seeds that could not be found in the iTunes track index.  Byes (matches with
+   no opponent) contribute no songs to either count.
 
    Args:
      tournament   - the tournament map
@@ -139,6 +160,7 @@
   (let [players   (:players tournament)
         matches   (matches-for-round tournament bracket round)
         lines     (transient ["#EXTM3U"])
+        matched   (volatile! 0)
         unmatched (transient [])]
     (doseq [match matches
             seed  (:players match)]
@@ -149,9 +171,11 @@
             (do (conj! lines (str "#EXTINF:-1,"
                                   (get player :artist "") " - "
                                   (get player :name "")))
-                (conj! lines (decode-location location)))
+                (conj! lines (decode-location location))
+                (vswap! matched inc))
             (conj! unmatched seed)))))
     {:m3u       (str/join "\n" (persistent! lines))
+     :matched   @matched
      :unmatched (persistent! unmatched)}))
 
 (defn save-playlist
@@ -173,11 +197,11 @@
     (when (empty? matches)
       (println (str "  No matches found for " (name bracket) " round " round "."))
       (System/exit 1))
-    (let [{:keys [m3u unmatched]} (generate-playlist tournament track-index bracket round)]
+    (let [{:keys [m3u matched unmatched]} (generate-playlist tournament track-index bracket round)]
       (with-open [writer (io/writer output-path :encoding "UTF-8")]
         (.write writer m3u))
       (println (str "  Saved: " output-path))
-      (println (str "  Songs: " (- (* 2 (count matches)) (count unmatched))
+      (println (str "  Songs: " matched
                     " matched, " (count unmatched) " not found"))
       (when (seq unmatched)
         (let [players (:players tournament)]
