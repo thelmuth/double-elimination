@@ -243,7 +243,7 @@
   ([] (cli-winner-fn nil))
   ([player-keys]
    (fn [left-seed right-seed players match tournament]
-     (let [[a-seed b-seed] (shuffle [left-seed right-seed])]
+     (let [[a-seed b-seed] [left-seed right-seed] #_(shuffle [left-seed right-seed])] ;; note: I've turned off shuffling of display order to better match playlist. Uncomment to shuffle
        (print-match a-seed b-seed players match player-keys)
        (show-prompt)
        (let [bottom (str "└" (str/join (repeat (- total-width 2) "─")) "┘")]
