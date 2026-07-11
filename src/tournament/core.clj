@@ -78,9 +78,34 @@
                                 bracket
                                 round)))
 
+    "aimp"
+    (let [[edn-path itunes-path bracket-str round-str folder-arg] args]
+      (when (some nil? [edn-path itunes-path bracket-str round-str])
+        (println "Usage: clj -M:aimp <save.edn> <itunes-library.xml> <WB|LB|GF> <round> [folder]")
+        (System/exit 1))
+      (when-not (.exists (io/file edn-path))
+        (println (str "Error: save file not found: " edn-path))
+        (System/exit 1))
+      (when-not (.exists (io/file itunes-path))
+        (println (str "Error: iTunes library not found: " itunes-path))
+        (System/exit 1))
+      (let [bracket (keyword (str/upper-case bracket-str))
+            round   (try (Integer/parseInt round-str)
+                         (catch NumberFormatException _
+                           (println (str "Error: round must be an integer, got: " round-str))
+                           (System/exit 1)))
+            folder  (or folder-arg "VGM")]
+        (playlist/save-aimp-playlist (storage/load-tournament edn-path)
+                                     itunes-path
+                                     (playlist/playlist-path edn-path bracket round "aimp")
+                                     bracket
+                                     round
+                                     folder)))
+
     (do
       (println (str "Unknown command: " mode))
       (println "Usage: clj -M:start <players.csv>")
       (println "       clj -M:load <save.edn>")
       (println "       clj -M:playlist <save.edn> <itunes-library.xml> <WB|LB|GF> <round>")
+      (println "       clj -M:aimp <save.edn> <itunes-library.xml> <WB|LB|GF> <round> [folder]")
       (System/exit 1))))

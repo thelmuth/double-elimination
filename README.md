@@ -116,6 +116,35 @@ The iTunes Music Library XML file is typically located at
 `~/Music/iTunes/iTunes Library.xml` on macOS or
 `%USERPROFILE%\Music\iTunes\iTunes Library.xml` on Windows.
 
+## Generating AIMP (Android) Playlists
+
+The iTunes playlist above embeds absolute desktop file paths
+(`file://localhost/F:/…`) that AIMP on Android can't resolve, so use the
+`aimp` command instead. It writes the same match ordering but with **relative**
+paths of the form `<folder>/<filename>`:
+
+```
+clj -M:aimp path/to/players.edn path/to/iTunes\ Library.xml <WB|LB|GF> <round> [folder]
+```
+
+For example:
+
+```
+clj -M:aimp songs.edn ~/Music/iTunes/iTunes\ Library.xml WB 3 VGM
+```
+
+This creates `songs-WB-R3-playlist-aimp.m3u`. The `folder` argument defaults to
+`VGM`. Each entry looks like `VGM/03 The Way I Feel.mp3` — just the track's
+filename under that folder.
+
+**To use it on the phone:** copy the tracks into a single folder (e.g. `VGM/`)
+on the phone with the *same filenames* they have on the desktop, and place the
+`.m3u` in that folder's **parent** directory. AIMP resolves the relative paths
+against the `.m3u`'s own location, so this works on internal storage or an SD
+card without hard-coding a `/storage/emulated/0/…` prefix. Because paths are
+just filenames, every track must have a unique filename (no per-album
+subfolders on the phone).
+
 ## Running Tests
 
 ```

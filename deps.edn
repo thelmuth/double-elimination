@@ -6,4 +6,5 @@
                          :exec-fn     mb.hawk.core/find-and-run-tests-cli}
             :start     {:main-opts ["-m" "tournament.core" "start"]}
             :load      {:main-opts ["-m" "tournament.core" "load"]}
-            :playlist  {:main-opts ["-m" "tournament.core" "playlist"]}}}
+            :playlist  {:main-opts ["-m" "tournament.core" "playlist"]}
+            :aimp      {:main-opts ["-m" "tournament.core" "aimp"]}}}
